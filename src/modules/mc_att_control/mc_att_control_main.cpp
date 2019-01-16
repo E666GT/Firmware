@@ -43,6 +43,8 @@
  *
  */
 
+
+
 #include "mc_att_control.hpp"
 
 #include <conversion/rotation.h>
@@ -51,6 +53,13 @@
 #include <circuit_breaker/circuit_breaker.h>
 #include <mathlib/math/Limits.hpp>
 #include <mathlib/math/Functions.hpp>
+
+//---------------------
+//------cyw:-----------
+#include <uORB/topics/vehicle_status.h>
+
+#include <uORB/topics/vehicle_local_position.h>
+//---------------------
 
 #define MIN_TAKEOFF_THRUST    0.2f
 #define TPA_RATE_LOWER_LIMIT 0.05f
@@ -452,6 +461,10 @@ MulticopterAttitudeControl::control_attitude(float dt)
 			_rates_int(2) = 0.0f;
 		}
 	}
+
+
+
+
 }
 
 /*
@@ -583,6 +596,311 @@ MulticopterAttitudeControl::control_attitude_rates(float dt)
 		_rates_int(i) = math::constrain(_rates_int(i), -_rate_int_lim(i), _rate_int_lim(i));
 
 	}
+
+if(modern_control_able)
+{
+    //-----------------------------------
+    //-----------------------------------
+    /*----PX4 Modern Control------*/
+    /*Author:Yiwen Chen*/
+    /*Time:2018.12.21*/
+    /*Abstract: Using Modern Control System to Control PX4 keep height=1m*/
+
+            //    bool updated;
+            //    vehicle_status_s status_current;
+            //    _vehicle_status_sub = orb_subscribe(ORB_ID(vehicle_status));
+
+            //    orb_check(_vehicle_status_sub, &updated);
+            //    if (updated) {
+            //        orb_copy(ORB_ID(vehicle_status), _vehicle_status_sub, &status_current);
+            //    }
+
+
+    if(_v_control_mode.flag_armed && _v_control_mode.flag_control_rates_enabled ){
+        if(arm_t0<1){
+        arm_t0=hrt_absolute_time();
+        }
+        run_t=(hrt_absolute_time()-arm_t0)/1000000;
+    }
+    else{
+        arm_t0=0;
+        run_t=0;
+    }
+    loop_times+=1;
+    if(loop_times%200==1){
+    //    PX4_INFO("arm_t0=%f",(double)arm_t0);
+    PX4_INFO("since arm_t0 ,run_t=%f",(double)run_t);
+    //PX4_INFO("flag_control_manual_enabled=%d",(bool)_v_control_mode.flag_control_manual_enabled);
+    //PX4_INFO("nav_state=%c",(bool)status_current.nav_state);
+    //PX4_INFO("flag_control_manual_enabled=%d",(bool)_v_control_mode.flag_control_manual_enabled);
+
+    }
+    //             (double)ss_k*ss_x(0,0),
+    //             (double)ss_k*ss_x(0,1),
+    //             (double)ss_k*ss_x(0,2),
+    //             (double)ss_k*ss_x(0,3));
+//    if(_v_control_mode.flag_control_manual_enabled){
+//    if(status_current.nav_state == vehicle_status_s::NAVIGATION_STATE_MANUAL){
+    if(1){
+    if(run_t<start_t){// 解锁后的时间<开始点，机体保持不动。安全时间。
+        if(loop_times%show_per_loop_times==1){
+        PX4_INFO("Stop now,Keeping Still");
+        }
+//        _att_control(0)=0;
+//        _att_control(1)=0;
+//        _att_control(2)=0;
+//        _att_control(3)=0;
+    }
+    else if(run_t>end_t){ //解锁后的时间>结束点，执行结束函数。
+        if(loop_times%show_per_loop_times==1){
+        PX4_INFO("End Now.I'm going back.");
+        }
+        //run_t=run_t;
+    }
+    else//开始点<解锁后的时间<结束点，运行控制函数
+    {
+
+
+        if(loop_times%200==1){
+        PX4_INFO("I'm in modern control now");
+        }
+
+      /*get current state */
+      /*get current position data*/
+        int pos_sub_fd = orb_subscribe(ORB_ID(vehicle_local_position));
+
+        //orb_set_interval(pos_sub_fd, 200);
+        bool updated;
+        orb_check(pos_sub_fd, &updated);
+        if (updated) {
+            orb_copy(ORB_ID(vehicle_local_position), pos_sub_fd, &pos_current);
+        }
+        else{
+            //PX4_INFO("no position get");
+            //orb_copy(ORB_ID(vehicle_local_position), pos_sub_fd, &pos_current);
+
+        }
+
+                //        px4_pollfd_struct_t fds[] = {
+                //            { .fd = pos_sub_fd,   .events = POLLIN },
+                //        };
+                //        int poll_ret = px4_poll(pos_sub_fd, 1,200);
+                //        if (poll_ret > 0) {
+                //            if (fds[0].revents & POLLIN) {
+                //                    orb_copy(ORB_ID(vehicle_local_position), pos_sub_fd, &pos_current);
+                //                    //orb_publish(ORB_ID(vehicle_attitude), att_pub, &att);
+                //                }
+                //        }
+
+      /*get current attitude data*/
+        Quatf q_current(_v_att.q);
+
+    float Z,agl_roll,agl_pitch,agl_yaw,rate_Z,rate_roll,rate_pitch,rate_yaw;
+    Z=pos_current.z;
+    agl_roll=Eulerf(q_current).phi();;
+    agl_pitch=Eulerf(q_current).theta();
+    agl_yaw=Eulerf(q_current).psi();
+    rate_Z=pos_current.vz;
+    rate_roll=rates(0);
+    rate_pitch=rates(1);
+    rate_yaw=rates(2);
+                    //            PX4_INFO("current_state=\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f",
+                    //                     (double)Z,(double)agl_roll,
+                    //                     (double)agl_pitch,(double)agl_yaw,
+                    //                     (double)rate_Z,(double)rate_roll,
+                    //                     (double)rate_pitch,(double)rate_yaw);
+
+
+    /*Init for default parameters in SS.*/
+    if(ss_seted==0){
+        /*All set zeros*/
+        ss_x.setZero();
+        ss_x_dot.setZero();
+        ss_r.setZero();
+        ss_u_scale.setZero();
+        ss_u_actual.setZero();
+        ss_y.setZero();
+        ss_k.setZero();
+        ss_A.setZero();
+        ss_B.setZero();
+        ss_C.setZero();
+        ss_D.setZero();
+        ss_G.setZero();
+        ss_G1.setZero();
+        ss_I4.setIdentity();
+
+
+
+        /*G*/
+        ss_G_scale(0,0)=1.4;
+        ss_G_scale(0,1)=1;
+        ss_G_scale(0,2)=1;
+        ss_G_scale(0,3)=1;
+
+        /*A*/
+        ss_A(0,4)=1;
+        ss_A(1,5)=1;
+        ss_A(2,6)=1;
+        ss_A(3,7)=1;
+
+        /*B*/
+        ss_B(4,0)=1/ss_m;
+        ss_B(5,1)=1/ss_Ixx;
+        ss_B(6,2)=1/ss_Iyy;
+        ss_B(7,3)=1/ss_Izz;
+
+        /*C*/
+        ss_C(0,0)=1;
+        ss_C(1,1)=1;
+        ss_C(2,2)=1;
+        ss_C(3,3)=1;
+
+        /*D*/
+        //=0
+
+
+        /*K*/
+        ss_k(0,0)=3;
+        ss_k(0,4)=4;
+        ss_k(1,1)=1.4800;
+        ss_k(1,2)=-0.3884;
+        ss_k(1,3)=-0.3751;
+        ss_k(1,5)=0.5151;
+        ss_k(1,6)=-0.0914;
+        ss_k(1,7)=-0.0650;
+        ss_k(2,1)=0.1841;
+        ss_k(2,2)=1.6960;
+        ss_k(2,3)=-0.0133;
+        ss_k(2,5)=0.0709;
+        ss_k(2,6)=0.5454;
+        ss_k(2,7)=0.0140;
+        ss_k(3,1)=0.9353;
+        ss_k(3,2)=0.6032;
+        ss_k(3,3)=5.4446;
+        ss_k(3,5)=0.0915;
+        ss_k(3,6)=0.1529;
+        ss_k(3,7)=2.1972;
+
+        /*Setout y*/
+
+        ss_setout_y(0,0)=setout_Z;
+        ss_setout_y(0,1)=setout_phi;
+        ss_setout_y(0,2)=setout_theta;
+        ss_setout_y(0,3)=setout_psi;
+
+
+        /*r*/
+        ss_r(0,0)=ss_setout_y(0,0)/ss_G_scale(0,0);
+        ss_r(0,1)=ss_setout_y(0,1)/ss_G_scale(0,1);
+        ss_r(0,2)=ss_setout_y(0,2)/ss_G_scale(0,2);
+        ss_r(0,3)=ss_setout_y(0,3)/ss_G_scale(0,3);
+        PX4_INFO("ss_r(0,0)",(double)ss_r(0,0));
+        ss_r(0,0)=5;
+        ss_r(0,1)=0;
+        ss_r(0,2)=0;
+       ss_r(0,3)=0;
+
+        /*G*/
+
+        //ss_G1=ss_C*1;
+        ss_G.setZero();
+
+        /*SS Finished Initiatsing*/
+        ss_seted=1;
+    }
+        //ss_A=ss_A*ss_A;
+        //PX4_INFO("ss_C=%f",(double)ss_A(1,1));
+        //ss_A=ss_A.inversed();
+
+
+
+        ss_x(0,0)=-Z;
+        ss_x(0,1)=agl_roll;
+        ss_x(0,2)=agl_pitch;
+        ss_x(0,3)=agl_yaw;
+        ss_x(0,4)=-rate_Z;
+        ss_x(0,5)=rate_roll;
+        ss_x(0,6)=rate_pitch;
+        ss_x(0,7)=rate_yaw;
+        ss_u_actual=ss_r-ss_k*ss_x;
+        ss_x_dot=ss_B*ss_u_actual+ss_A*ss_x;
+        ss_x=ss_x+ss_x_dot*dt;
+        ss_y=ss_C*ss_x;
+        //PX4_INFO("dt=\n%f",(double)dt);
+
+    ss_u_scale(0,0)=ss_u_actual(0,0)/Mx_max;
+    ss_u_scale(0,1)=ss_u_actual(0,1)/My_max;
+    ss_u_scale(0,2)=ss_u_actual(0,2)/Mz_max;
+    ss_u_scale(0,3)=ss_u_actual(0,3)/T_max;
+    _att_control(0)=ss_u_scale(0,1);//roll
+    _att_control(1)=ss_u_scale(0,2);//pitch
+    _att_control(2)=ss_u_scale(0,3);//yaw
+    _thrust_sp=ss_u_scale(0,0);//thrust //Make it's bigger than gravity
+ //_thrust_sp=100000;
+
+
+//    _att_control(0)=0;
+//    _att_control(1)=0;
+//    _att_control(2)=0;
+//    _att_control(3)=1;
+
+
+
+        //展示结果，排查错误
+        if(loop_times%show_per_loop_times==1){
+            PX4_INFO("_att_control=\n%f\n%f\n%f\n%f",
+                     (double)_att_control(0),
+                     (double)_att_control(1),
+                     (double)_att_control(2),
+                     (double)_att_control(3));
+            PX4_INFO("ss_u_actual=\n%f\n%f\n%f\n%f",
+                     (double)ss_u_actual(0,0),
+                     (double)ss_u_actual(0,1),
+                     (double)ss_u_actual(0,2),
+                     (double)ss_u_actual(0,3));
+        //    PX4_INFO("ss_set=\n%d",
+        //             (int)ss_seted);
+            PX4_INFO("ss_r=\n%f\n%f\n%f\n%f",
+                     (double)ss_r(0,0),
+                     (double)ss_r(0,1),
+                     (double)ss_r(0,2),
+                     (double)ss_r(0,3));
+//            PX4_INFO("ss_k*ss_x=\n%f\n%f\n%f\n%f",
+//                     (double)(ss_k*ss_x(0,0)),
+//                     (double)ss_k*ss_x(0,1),
+//                     (double)ss_k*ss_x(0,2),
+//                     (double)ss_k*ss_x(0,3));
+
+            PX4_INFO("ss_y=\n%f\n%f\n%f\n%f",
+                     (double)ss_y(0,0),
+                     (double)ss_y(0,1),
+                     (double)ss_y(0,2),
+                     (double)ss_y(0,3));
+
+            PX4_INFO("ss_x=\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f",(double)ss_x(0,0),(double)ss_x(0,1),(double)ss_x(0,2),(double)ss_x(0,3),
+                     (double)ss_x(0,4),
+                     (double)ss_x(0,5),
+                     (double)ss_x(0,6),
+                     (double)ss_x(0,7)
+                     );
+
+
+
+        }
+
+    //float acce_z=0;
+    //acce_z=
+    //PX4_INFO("Z_acce=%f",(double))
+
+    orb_unsubscribe(pos_sub_fd);
+    //    orb_unsubscribe(_vehicle_status_sub);
+
+    /*----PX4 Modern Control--END------*/
+
+    }
+    }
+}
+
 }
 
 void
@@ -634,6 +952,8 @@ MulticopterAttitudeControl::run()
 
 	while (!should_exit()) {
 
+
+        //一开机，这个loop就会一直执行
 		poll_fds.fd = _sensor_gyro_sub[_selected_gyro];
 
 		/* wait for up to 100ms for data */
@@ -746,6 +1066,7 @@ MulticopterAttitudeControl::run()
 			}
 
 			if (_v_control_mode.flag_control_rates_enabled) {
+
 				control_attitude_rates(dt);
 
 				/* publish actuator controls */
@@ -766,7 +1087,14 @@ MulticopterAttitudeControl::run()
 
 				if (!_actuators_0_circuit_breaker_enabled) {
 					if (_actuators_0_pub != nullptr) {
-
+//                        if(loop_times%show_per_loop_times==1){
+//                        PX4_INFO("actual publish");
+//                        PX4_INFO("_actuators=\n%f\n%f\n%f\n%f",
+//                                 (double)_actuators.control[0],
+//                                 (double)_actuators.control[1],
+//                                 (double)_actuators.control[2],
+//                                 (double)_actuators.control[3]);
+//                        }
 						orb_publish(_actuators_id, _actuators_0_pub, &_actuators);
 
 					} else if (_actuators_id) {
