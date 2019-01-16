@@ -58,6 +58,10 @@
 #include <uORB/topics/vehicle_land_detected.h>
 #include <uORB/topics/landing_gear.h>
 
+/*cyw_mc get pos data*/
+#include <uORB/topics/vehicle_local_position.h>
+#include <matrix/math.hpp>
+
 /**
  * Multicopter attitude control app start / stop handling function
  */
@@ -284,5 +288,72 @@ private:
 	matrix::Vector3f _acro_rate_max;	/**< max attitude rates in acro mode */
 	float _man_tilt_max;			/**< maximum tilt allowed for manual flight [rad] */
 
+
+
+        /*Params in Modern Control Code */
+        struct vehicle_local_position_s pos_current;
+        bool cywmc_able=1;
+        float run_t=0;
+        float start_t=3;
+        float keep_t=10;
+        int loop_times=0;
+        float arm_t0=0;
+
+        matrix::Matrix<float,8,1> ss_x;
+        matrix::Matrix<float,8,1> ss_x_dot;
+        matrix::Matrix<float,4,1> ss_r;
+        matrix::Matrix<float,4,4> ss_G_scale;
+        matrix::Matrix<float,4,1> ss_u_scale;
+        matrix::Matrix<float,4,1> ss_u_actual;
+        matrix::Matrix<float,4,1> ss_y;
+
+        matrix::Matrix<float,4,1> ss_setout_y;
+        matrix::Matrix<float,4,8> ss_k;
+        matrix::Matrix<float,8,8> ss_A;
+        matrix::Matrix<float,8,4> ss_B;
+        matrix::Matrix<float,4,8> ss_C;
+        matrix::Matrix<float,4,4> ss_D;
+        matrix::SquareMatrix<float,4> ss_G;     /*Transfer Function*/
+        matrix::SquareMatrix<float,4> ss_G1;    /*Transfer Function part 1*/
+        matrix::SquareMatrix<float,4> ss_I4;    /*diag=1,cols=4*/
+
+        matrix::Matrix<float,4,4> ss_test;
+        int ss_seted=0;                         /*=1,ss already seted; =0,ss not seted*/
+
+
+
+        /*DIY output*/
+        float setout_Z=5;
+        float setout_phi=0;
+        float setout_theta=0;
+        float setout_psi=0;
+
+        /*DIY PARAMS*/
+//        float run_t=0;   //定义从arm_t0后经历的时间，单位秒
+//        float start_t=1; //run_t大于start_t之后会开始控制机体运动
+//        float end_t=30; //机体开始运动的时间
+//        int loop_times=0;
+//        float arm_t0=0; //定义从系统启动，到解锁arm的时间，单位10^-6秒
+        int show_per_times=250; //每x个循环后，展示一次数据报告
+
+        float ss_m=1.5; //temp assume
+        float ss_Ixx=0.05;//temp assume
+        float ss_Iyy=0.05;//temp assume
+        float ss_Izz=0.25;//temp assume
+        float T_max=2.4;//temp assume
+        float Mx_max=2;//temp assume
+        float My_max=2;//temp assume
+        float Mz_max=2;//temp assume
+
+//        typedef struct {
+//                /* This part of the struct is POSIX-like */
+//                int		fd;       /* The descriptor being polled */
+//                pollevent_t 	events;   /* The input event flags */
+//                pollevent_t 	revents;  /* The output event flags */
+
+//                /* Required for PX4 compatibility */
+//                px4_sem_t   *sem;  	/* Pointer to semaphore used to post output event */
+//                void   *priv;     	/* For use by drivers */
+//        } px4_pollfd_struct_t;
 };
 

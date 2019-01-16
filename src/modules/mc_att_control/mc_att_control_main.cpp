@@ -42,6 +42,9 @@
  * @author Beat Küng		<beat-kueng@gmx.net>
  *
  */
+//----CYW_MC--HEAD-----
+#include <uORB/topics/vehicle_status.h>
+//--------------------------
 
 #include "mc_att_control.hpp"
 
@@ -737,6 +740,268 @@ MulticopterAttitudeControl::control_attitude_rates(float dt)
 		_rates_int(i) = math::constrain(_rates_int(i), -_rate_int_lim(i), _rate_int_lim(i));
 
 	}
+
+
+
+
+    /*----CYW_ PX4 Modern Control--START------*/
+    /*Author:Yiwen Chen*/
+    /*Time:2019.01.16*/
+    /*git version:exp20190116v190aCYWMCv100*/
+    /*Abstract: Using Modern Control System to Control PX4 keep height*/
+if(cywmc_able){
+
+    //some cache (wasted)
+    if(0){
+        //    bool updated;
+        //    vehicle_status_s status_current;
+        //    _vehicle_status_sub = orb_subscribe(ORB_ID(vehicle_status));
+
+        //    orb_check(_vehicle_status_sub, &updated);
+        //    if (updated) {
+        //        orb_copy(ORB_ID(vehicle_status), _vehicle_status_sub, &status_current);
+        //    }
+
+
+        //    if(_v_control_mode.flag_armed ){
+        //        if(arm_t0<1){
+        //        arm_t0=hrt_absolute_time();
+        //        }
+
+        //    }
+
+        //    if(_v_control_mode.flag_armed){
+        //        run_t=(hrt_absolute_time()-arm_t0)/1000000;
+        //    }
+        //    else{
+        //        run_t=0;
+        //    }
+    }
+
+    /*Print Status For Checking Error*/
+    loop_times+=1;
+    if(loop_times%show_per_times==1){
+            //    PX4_INFO("arm_t0=%f",(double)arm_t0);
+            //    PX4_INFO("run_t=%f",(double)run_t);
+            //    PX4_INFO("flag_control_manual_enabled=%d",(bool)_v_control_mode.flag_control_manual_enabled);
+            //    PX4_INFO("nav_state=%c",(bool)status_current.nav_state);
+
+                //PX4_INFO("flag_control_manual_enabled=%d",(bool)_v_control_mode.flag_control_manual_enabled);
+                }
+
+    /*Get Current State */
+      /*1.get current position data*/
+        int pos_sub_fd = orb_subscribe(ORB_ID(vehicle_local_position));
+        //struct vehicle_local_position_s pos_current;
+        //orb_set_interval(pos_sub_fd, 200);
+        bool updated;
+        orb_check(pos_sub_fd, &updated);
+        if (updated) {
+            orb_copy(ORB_ID(vehicle_local_position), pos_sub_fd, &pos_current);
+        }
+            //some cache (wasted) _sub fd
+            if(0){
+            //        px4_pollfd_struct_t fds[] = {
+            //            { .fd = pos_sub_fd,   .events = POLLIN },
+            //        };
+            //        int poll_ret = px4_poll(pos_sub_fd, 1,200);
+            //        if (poll_ret > 0) {
+            //            if (fds[0].revents & POLLIN) {
+            //                    orb_copy(ORB_ID(vehicle_local_position), pos_sub_fd, &pos_current);
+            //                    //orb_publish(ORB_ID(vehicle_attitude), att_pub, &att);
+            //                }
+            //        }
+            }
+      /*2.get current attitude data*/
+        Quatf q_current(_v_att.q);
+
+        float Z,agl_roll,agl_pitch,agl_yaw,rate_Z,rate_roll,rate_pitch,rate_yaw;
+        Z=pos_current.z;
+        agl_roll=Eulerf(q_current).phi();;
+        agl_pitch=Eulerf(q_current).theta();
+        agl_yaw=Eulerf(q_current).psi();
+        rate_Z=pos_current.vz;
+        rate_roll=rates(0);
+        rate_pitch=rates(1);
+        rate_yaw=rates(2);
+        //            PX4_INFO("current_state=\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f",
+        //                     (double)Z,(double)agl_roll,
+        //                     (double)agl_pitch,(double)agl_yaw,
+        //                     (double)rate_Z,(double)rate_roll,
+        //                     (double)rate_pitch,(double)rate_yaw);
+
+
+
+    /*Init for default parameters in SS.*/
+    if(ss_seted==0){
+        /*All set zeros*/
+        ss_x.setZero();
+        ss_x_dot.setZero();
+        ss_r.setZero();
+        ss_u_scale.setZero();
+        ss_u_actual.setZero();
+        ss_y.setZero();
+        ss_k.setZero();
+        ss_A.setZero();
+        ss_B.setZero();
+        ss_C.setZero();
+        ss_D.setZero();
+        ss_G.setZero();
+        ss_G1.setZero();
+        ss_I4.setIdentity();
+        ss_G_scale.setZero();
+
+
+
+        ss_G_scale(0,0)=3;
+        ss_G_scale(1,1)=0;
+        ss_G_scale(2,2)=0;
+        ss_G_scale(3,3)=0;
+
+        /*r*/
+        ss_r(0,0)=100;
+        ss_r(0,1)=0;
+        ss_r(0,2)=0;
+        ss_r(0,3)=0;
+        ss_r=ss_G_scale*ss_r;
+        /*A*/
+        ss_A(0,4)=1;
+        ss_A(1,5)=1;
+        ss_A(2,6)=1;
+        ss_A(3,7)=1;
+
+        /*B*/
+        ss_B(4,0)=1/ss_m;
+        ss_B(5,1)=1/ss_Ixx;
+        ss_B(6,2)=1/ss_Iyy;
+        ss_B(7,3)=1/ss_Izz;
+
+        /*C*/
+        ss_C(0,0)=1;
+        ss_C(1,1)=1;
+        ss_C(2,2)=1;
+        ss_C(3,3)=1;
+
+        /*D*/
+        //=0
+
+
+        /*K*/
+        ss_k(0,0)=3;
+        ss_k(0,4)=4;
+        ss_k(1,1)=1.4800;
+        ss_k(1,2)=-0.3884;
+        ss_k(1,3)=-0.3751;
+        ss_k(1,5)=0.5151;
+        ss_k(1,6)=-0.0914;
+        ss_k(1,7)=-0.0650;
+        ss_k(2,1)=0.1841;
+        ss_k(2,2)=1.6960;
+        ss_k(2,3)=-0.0133;
+        ss_k(2,5)=0.0709;
+        ss_k(2,6)=0.5454;
+        ss_k(2,7)=0.0140;
+        ss_k(3,1)=0.9353;
+        ss_k(3,2)=0.6032;
+        ss_k(3,3)=5.4446;
+        ss_k(3,5)=0.0915;
+        ss_k(3,6)=0.1529;
+        ss_k(3,7)=2.1972;
+
+        /*Setout y*/
+        ss_setout_y(0,0)=setout_Z;
+        ss_setout_y(0,1)=setout_phi;
+        ss_setout_y(0,2)=setout_theta;
+        ss_setout_y(0,3)=setout_psi;
+
+
+        /*G*/
+
+        //ss_G1=ss_C*1;
+        ss_G.setZero();
+
+        /*SS Finished Initiatsing*/
+        ss_seted=1;
+
+        //ss_A=ss_A*ss_A;
+        //PX4_INFO("ss_C=%f",(double)ss_A(1,1));
+        //ss_A=ss_A.inversed();
+    }
+
+
+    /* Main feedback control */
+    if(1){
+        ss_x(0,0)=-Z;
+        ss_x(0,1)=agl_roll;
+        ss_x(0,2)=agl_pitch;
+        ss_x(0,3)=agl_yaw;
+        ss_x(0,4)=-rate_Z;
+        ss_x(0,5)=rate_roll;
+        ss_x(0,6)=rate_pitch;
+        ss_x(0,7)=rate_yaw;
+        ss_u_actual=ss_r-ss_k*ss_x;
+        ss_x_dot=ss_B*ss_u_actual+ss_A*ss_x;
+        ss_x=ss_x+ss_x_dot*dt;
+        ss_y=ss_C*ss_x;
+        //PX4_INFO("dt=\n%f",(double)dt);
+    }
+
+    /*Give Output*/
+    if(1){
+        ss_u_scale(0,0)=ss_u_actual(0,0)/Mx_max;
+        ss_u_scale(0,1)=ss_u_actual(0,1)/My_max;
+        ss_u_scale(0,2)=ss_u_actual(0,2)/Mz_max;
+        ss_u_scale(0,3)=ss_u_actual(0,3)/T_max;
+        _att_control(0)=ss_u_scale(0,1);//roll
+        _att_control(1)=ss_u_scale(0,2);//pitch
+        _att_control(2)=ss_u_scale(0,3);//yaw
+        _thrust_sp=ss_u_scale(0,0);
+        //_att_control(3)=ss_u_scale(0,0);//thrust //Make it's bigger than gravity
+        }
+
+
+    /*Print Status Data to Chekc Error*/
+    if(loop_times%show_per_times==1){
+//    PX4_INFO("_att_control=\n%f\n%f\n%f\n%f",
+//             (double)_att_control(0),
+//             (double)_att_control(1),
+//             (double)_att_control(2),
+//             (double)_att_control(3));
+//    PX4_INFO("ss_u_actual=\n%f\n%f\n%f\n%f",
+//             (double)ss_u_actual(0,0),
+//             (double)ss_u_actual(0,1),
+//             (double)ss_u_actual(0,2),
+//             (double)ss_u_actual(0,3));
+//    PX4_INFO("ss_set=\n%d",
+//             (int)ss_seted);
+//    PX4_INFO("ss_r=\n%f\n%f\n%f\n%f",
+//             (double)ss_r(0,0),
+//             (double)ss_r(0,1),
+//             (double)ss_r(0,2),
+//             (double)ss_r(0,3));
+//    PX4_INFO("ss_k*ss_x=\n%f\n%f\n%f\n%f",
+//             (double)ss_k*ss_x(0,0),
+//             (double)ss_k*ss_x(0,1),
+//             (double)ss_k*ss_x(0,2),
+//             (double)ss_k*ss_x(0,3));
+
+//    PX4_INFO("ss_y=\n%f\n%f\n%f\n%f",
+//             (double)ss_y(0,0),
+//             (double)ss_y(0,1),
+//             (double)ss_y(0,2),
+//             (double)ss_y(0,3));
+}
+
+
+    /*End of CYW_MC*/
+    if(1){
+        orb_unsubscribe(pos_sub_fd);
+    //    orb_unsubscribe(_vehicle_status_sub);
+}
+
+}
+    /*----CYW_ PX4 Modern Control--END------*/
+
 }
 
 void
