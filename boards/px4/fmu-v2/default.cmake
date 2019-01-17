@@ -46,8 +46,8 @@ px4_add_board(
 		#mkblctrl
 		#pca9685
 		#protocol_splitter
-		#pwm_input
-		#pwm_out_sim
+		pwm_input
+		pwm_out_sim
 		px4flow
 		px4fmu
 		px4io
@@ -66,8 +66,8 @@ px4_add_board(
 		dataman
 		ekf2
 		events
-		fw_att_control
-		fw_pos_control_l1
+		#fw_att_control
+		#fw_pos_control_l1
 		#gnd_att_control
 		#gnd_pos_control
 		land_detector
@@ -82,7 +82,7 @@ px4_add_board(
 		#position_estimator_inav
 		sensors
 		vmount
-		vtol_att_control
+		#vtol_att_control
 		#wind_estimator
 
 	SYSTEMCMDS
