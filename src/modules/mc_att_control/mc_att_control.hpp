@@ -293,11 +293,37 @@ private:
         /*Params in Modern Control Code */
         struct vehicle_local_position_s pos_current;
         bool cywmc_able=1;
+
+        bool need_update_r=0; //1, r will be update in every loop
+
+        bool give_output_able=1; //1,give_output_able
         float run_t=0;
-        float start_t=3;
-        float keep_t=10;
+        //float start_t=3;
+        //float keep_t=10;
         int loop_times=0;
         float arm_t0=0;
+
+        /*Mission Params*/
+        bool modern_control_mission_able=1;  //able to mission
+        int modern_control_mission_select=2;
+        //mission 0: pass;
+        //mission 1: 1m 1.5m 2m 0m
+        //mission 2: 1m
+        bool return_back_to_0m_able=0; //1,it will safely return back to 0m
+        bool mordern_control_able=1; //1,mordern_control_able
+            /*Return_Back_To_0m*/
+            float setout_Z_last=0;
+            float back_Z_aim=1000;
+            float back_Z_aim_dt=0;
+            float start_return_back_runt=0;
+            float return_degress_rate=0.95;
+            //float return_degress_value=0.1;
+            //int return_steps=0;
+            //float return_step_time=1;
+            //int return_back_loop_times=0;
+            /*Mission 1:1m 1.5m 2m 0m*/
+            int ms1_t[10];
+            bool is_msl_t_set=0;
 
         matrix::Matrix<float,8,1> ss_x;
         matrix::Matrix<float,8,1> ss_x_dot;
@@ -313,9 +339,9 @@ private:
         matrix::Matrix<float,8,4> ss_B;
         matrix::Matrix<float,4,8> ss_C;
         matrix::Matrix<float,4,4> ss_D;
-        matrix::SquareMatrix<float,4> ss_G;     /*Transfer Function*/
-        matrix::SquareMatrix<float,4> ss_G1;    /*Transfer Function part 1*/
-        matrix::SquareMatrix<float,4> ss_I4;    /*diag=1,cols=4*/
+        //matrix::SquareMatrix<float,4> ss_G;     /*Transfer Function*/
+        //matrix::SquareMatrix<float,4> ss_G1;    /*Transfer Function part 1*/
+        //matrix::SquareMatrix<float,4> ss_I4;    /*diag=1,cols=4*/
 
         matrix::Matrix<float,4,4> ss_test;
         int ss_seted=0;                         /*=1,ss already seted; =0,ss not seted*/
@@ -336,15 +362,18 @@ private:
 //        float arm_t0=0; //定义从系统启动，到解锁arm的时间，单位10^-6秒
         int show_per_times=250; //每x个循环后，展示一次数据报告
 
-        float ss_m=1.5; //temp assume
+        float ss_m=1.25; //temp assume
         float ss_Ixx=0.05;//temp assume
         float ss_Iyy=0.05;//temp assume
         float ss_Izz=0.25;//temp assume
-        float T_max=2.4;//temp assume
+        float g=9.80;//gravity
+        float T_max=29.75;//=24.6*m =(max_a+g)*m,max_a=14;
+        //float T_max=5;//temp assume
+        float ss_G_scale_0=6;
         float Mx_max=2;//temp assume
         float My_max=2;//temp assume
         float Mz_max=2;//temp assume
-
+        //float T_current=0;
 //        typedef struct {
 //                /* This part of the struct is POSIX-like */
 //                int		fd;       /* The descriptor being polled */

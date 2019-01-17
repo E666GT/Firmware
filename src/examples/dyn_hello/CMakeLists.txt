@@ -32,10 +32,10 @@
 ############################################################################
 
 px4_add_module(
-	MODULE examples__dyn_hello
-	MAIN hello
-	SRCS
-		hello.cpp
-	DEPENDS
-	DYNAMIC
-	)
+        MODULE examples__dyn_hello
+        MAIN hello
+        SRCS
+                hello.cpp
+        DEPENDS
+        DYNAMIC
+        )

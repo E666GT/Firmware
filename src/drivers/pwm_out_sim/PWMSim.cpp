@@ -37,7 +37,7 @@
 
 PWMSim::PWMSim() :
 	CDev(PWM_OUTPUT0_DEVICE_PATH),
-	_perf_control_latency(perf_alloc(PC_ELAPSED, "pwm_out_sim control latency"))
+    _perf_control_latency(perf_alloc(PC_ELAPSED, "pwm_out_sim control latency"))
 {
 	for (unsigned i = 0; i < MAX_ACTUATORS; i++) {
 		_pwm_min[i] = PWM_SIM_PWM_MIN_MAGIC;

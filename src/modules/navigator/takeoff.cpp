@@ -149,6 +149,6 @@ Takeoff::set_takeoff_position()
 	}
 
 	_navigator->set_can_loiter_at_sp(true);
-
+    //PX4_INFO("HERE");
 	_navigator->set_position_setpoint_triplet_updated();
 }

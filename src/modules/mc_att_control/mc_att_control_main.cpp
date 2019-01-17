@@ -433,20 +433,20 @@ MulticopterAttitudeControl::get_landing_gear_state()
 void
 MulticopterAttitudeControl::generate_attitude_setpoint(float dt, bool reset_yaw_sp)
 {
-	vehicle_attitude_setpoint_s attitude_setpoint{};
-	landing_gear_s landing_gear{};
-	const float yaw = Eulerf(Quatf(_v_att.q)).psi();
+//	vehicle_attitude_setpoint_s attitude_setpoint{};
+//	landing_gear_s landing_gear{};
+//	const float yaw = Eulerf(Quatf(_v_att.q)).psi();
 
 	/* reset yaw setpoint to current position if needed */
-	if (reset_yaw_sp) {
-		_man_yaw_sp = yaw;
+//	if (reset_yaw_sp) {
+//		_man_yaw_sp = yaw;
 
-	} else if (_manual_control_sp.z > 0.05f) {
+//	} else if (_manual_control_sp.z > 0.05f) {
 
-		const float yaw_rate = math::radians(_yaw_rate_scaling.get());
-		attitude_setpoint.yaw_sp_move_rate = _manual_control_sp.r * yaw_rate;
-		_man_yaw_sp = wrap_pi(_man_yaw_sp + attitude_setpoint.yaw_sp_move_rate * dt);
-	}
+//		const float yaw_rate = math::radians(_yaw_rate_scaling.get());
+//		attitude_setpoint.yaw_sp_move_rate = _manual_control_sp.r * yaw_rate;
+//		_man_yaw_sp = wrap_pi(_man_yaw_sp + attitude_setpoint.yaw_sp_move_rate * dt);
+//	}
 
 	/*
 	 * Input mapping for roll & pitch setpoints
@@ -458,76 +458,76 @@ MulticopterAttitudeControl::generate_attitude_setpoint(float dt, bool reset_yaw_
 	 * This allows a simple limitation of the tilt angle, the vehicle flies towards the direction that the stick
 	 * points to, and changes of the stick input are linear.
 	 */
-	const float x = _manual_control_sp.x * _man_tilt_max;
-	const float y = _manual_control_sp.y * _man_tilt_max;
+//	const float x = _manual_control_sp.x * _man_tilt_max;
+//	const float y = _manual_control_sp.y * _man_tilt_max;
 
 	// we want to fly towards the direction of (x, y), so we use a perpendicular axis angle vector in the XY-plane
-	Vector2f v = Vector2f(y, -x);
-	float v_norm = v.norm(); // the norm of v defines the tilt angle
+//	Vector2f v = Vector2f(y, -x);
+//	float v_norm = v.norm(); // the norm of v defines the tilt angle
 
-	if (v_norm > _man_tilt_max) { // limit to the configured maximum tilt angle
-		v *= _man_tilt_max / v_norm;
-	}
+//	if (v_norm > _man_tilt_max) { // limit to the configured maximum tilt angle
+//		v *= _man_tilt_max / v_norm;
+//	}
 
-	Quatf q_sp_rpy = AxisAnglef(v(0), v(1), 0.f);
-	Eulerf euler_sp = q_sp_rpy;
-	attitude_setpoint.roll_body = euler_sp(0);
-	attitude_setpoint.pitch_body = euler_sp(1);
+//	Quatf q_sp_rpy = AxisAnglef(v(0), v(1), 0.f);
+//	Eulerf euler_sp = q_sp_rpy;
+//	attitude_setpoint.roll_body = euler_sp(0);
+//	attitude_setpoint.pitch_body = euler_sp(1);
 	// The axis angle can change the yaw as well (noticeable at higher tilt angles).
 	// This is the formula by how much the yaw changes:
 	//   let a := tilt angle, b := atan(y/x) (direction of maximum tilt)
 	//   yaw = atan(-2 * sin(b) * cos(b) * sin^2(a/2) / (1 - 2 * cos^2(b) * sin^2(a/2))).
-	attitude_setpoint.yaw_body = _man_yaw_sp + euler_sp(2);
+//	attitude_setpoint.yaw_body = _man_yaw_sp + euler_sp(2);
 
 	/* modify roll/pitch only if we're a VTOL */
-	if (_vehicle_status.is_vtol) {
-		// Construct attitude setpoint rotation matrix. Modify the setpoints for roll
-		// and pitch such that they reflect the user's intention even if a large yaw error
-		// (yaw_sp - yaw) is present. In the presence of a yaw error constructing a rotation matrix
-		// from the pure euler angle setpoints will lead to unexpected attitude behaviour from
-		// the user's view as the euler angle sequence uses the  yaw setpoint and not the current
-		// heading of the vehicle.
-		// However there's also a coupling effect that causes oscillations for fast roll/pitch changes
-		// at higher tilt angles, so we want to avoid using this on multicopters.
-		// The effect of that can be seen with:
-		// - roll/pitch into one direction, keep it fixed (at high angle)
-		// - apply a fast yaw rotation
-		// - look at the roll and pitch angles: they should stay pretty much the same as when not yawing
+//	if (_vehicle_status.is_vtol) {
+//		// Construct attitude setpoint rotation matrix. Modify the setpoints for roll
+//		// and pitch such that they reflect the user's intention even if a large yaw error
+//		// (yaw_sp - yaw) is present. In the presence of a yaw error constructing a rotation matrix
+//		// from the pure euler angle setpoints will lead to unexpected attitude behaviour from
+//		// the user's view as the euler angle sequence uses the  yaw setpoint and not the current
+//		// heading of the vehicle.
+//		// However there's also a coupling effect that causes oscillations for fast roll/pitch changes
+//		// at higher tilt angles, so we want to avoid using this on multicopters.
+//		// The effect of that can be seen with:
+//		// - roll/pitch into one direction, keep it fixed (at high angle)
+//		// - apply a fast yaw rotation
+//		// - look at the roll and pitch angles: they should stay pretty much the same as when not yawing
 
-		// calculate our current yaw error
-		float yaw_error = wrap_pi(attitude_setpoint.yaw_body - yaw);
+//		// calculate our current yaw error
+//		float yaw_error = wrap_pi(attitude_setpoint.yaw_body - yaw);
 
-		// compute the vector obtained by rotating a z unit vector by the rotation
-		// given by the roll and pitch commands of the user
-		Vector3f zB = {0.0f, 0.0f, 1.0f};
-		Dcmf R_sp_roll_pitch = Eulerf(attitude_setpoint.roll_body, attitude_setpoint.pitch_body, 0.0f);
-		Vector3f z_roll_pitch_sp = R_sp_roll_pitch * zB;
+//		// compute the vector obtained by rotating a z unit vector by the rotation
+//		// given by the roll and pitch commands of the user
+//		Vector3f zB = {0.0f, 0.0f, 1.0f};
+//		Dcmf R_sp_roll_pitch = Eulerf(attitude_setpoint.roll_body, attitude_setpoint.pitch_body, 0.0f);
+//		Vector3f z_roll_pitch_sp = R_sp_roll_pitch * zB;
 
-		// transform the vector into a new frame which is rotated around the z axis
-		// by the current yaw error. this vector defines the desired tilt when we look
-		// into the direction of the desired heading
-		Dcmf R_yaw_correction = Eulerf(0.0f, 0.0f, -yaw_error);
-		z_roll_pitch_sp = R_yaw_correction * z_roll_pitch_sp;
+//		// transform the vector into a new frame which is rotated around the z axis
+//		// by the current yaw error. this vector defines the desired tilt when we look
+//		// into the direction of the desired heading
+//		Dcmf R_yaw_correction = Eulerf(0.0f, 0.0f, -yaw_error);
+//		z_roll_pitch_sp = R_yaw_correction * z_roll_pitch_sp;
 
-		// use the formula z_roll_pitch_sp = R_tilt * [0;0;1]
-		// R_tilt is computed from_euler; only true if cos(roll) not equal zero
-		// -> valid if roll is not +-pi/2;
-		attitude_setpoint.roll_body = -asinf(z_roll_pitch_sp(1));
-		attitude_setpoint.pitch_body = atan2f(z_roll_pitch_sp(0), z_roll_pitch_sp(2));
-	}
+//		// use the formula z_roll_pitch_sp = R_tilt * [0;0;1]
+//		// R_tilt is computed from_euler; only true if cos(roll) not equal zero
+//		// -> valid if roll is not +-pi/2;
+//		attitude_setpoint.roll_body = -asinf(z_roll_pitch_sp(1));
+//		attitude_setpoint.pitch_body = atan2f(z_roll_pitch_sp(0), z_roll_pitch_sp(2));
+//	}
 
 	/* copy quaternion setpoint to attitude setpoint topic */
-	Quatf q_sp = Eulerf(attitude_setpoint.roll_body, attitude_setpoint.pitch_body, attitude_setpoint.yaw_body);
-	q_sp.copyTo(attitude_setpoint.q_d);
-	attitude_setpoint.q_d_valid = true;
+//	Quatf q_sp = Eulerf(attitude_setpoint.roll_body, attitude_setpoint.pitch_body, attitude_setpoint.yaw_body);
+//	q_sp.copyTo(attitude_setpoint.q_d);
+//	attitude_setpoint.q_d_valid = true;
 
-	attitude_setpoint.thrust_body[2] = -throttle_curve(_manual_control_sp.z);
+//	attitude_setpoint.thrust_body[2] = -throttle_curve(_manual_control_sp.z);
 
-	_landing_gear.landing_gear = get_landing_gear_state();
+    _landing_gear.landing_gear = get_landing_gear_state();
 
-	attitude_setpoint.timestamp = landing_gear.timestamp = hrt_absolute_time();
-	orb_publish_auto(ORB_ID(vehicle_attitude_setpoint), &_vehicle_attitude_setpoint_pub, &attitude_setpoint, nullptr, ORB_PRIO_DEFAULT);
-	orb_publish_auto(ORB_ID(landing_gear), &_landing_gear_pub, &attitude_setpoint, nullptr, ORB_PRIO_DEFAULT);
+//	attitude_setpoint.timestamp = landing_gear.timestamp = hrt_absolute_time();
+//	orb_publish_auto(ORB_ID(vehicle_attitude_setpoint), &_vehicle_attitude_setpoint_pub, &attitude_setpoint, nullptr, ORB_PRIO_DEFAULT);
+//	orb_publish_auto(ORB_ID(landing_gear), &_landing_gear_pub, &attitude_setpoint, nullptr, ORB_PRIO_DEFAULT);
 }
 
 /**
@@ -540,56 +540,56 @@ MulticopterAttitudeControl::control_attitude()
 {
 	vehicle_attitude_setpoint_poll();
 
-	// physical thrust axis is the negative of body z axis
-	_thrust_sp = -_v_att_sp.thrust_body[2];
+//	// physical thrust axis is the negative of body z axis
+//	_thrust_sp = -_v_att_sp.thrust_body[2];
 
-	/* prepare yaw weight from the ratio between roll/pitch and yaw gains */
-	Vector3f attitude_gain = _attitude_p;
-	const float roll_pitch_gain = (attitude_gain(0) + attitude_gain(1)) / 2.f;
-	const float yaw_w = math::constrain(attitude_gain(2) / roll_pitch_gain, 0.f, 1.f);
-	attitude_gain(2) = roll_pitch_gain;
+//	/* prepare yaw weight from the ratio between roll/pitch and yaw gains */
+//	Vector3f attitude_gain = _attitude_p;
+//	const float roll_pitch_gain = (attitude_gain(0) + attitude_gain(1)) / 2.f;
+//	const float yaw_w = math::constrain(attitude_gain(2) / roll_pitch_gain, 0.f, 1.f);
+//	attitude_gain(2) = roll_pitch_gain;
 
-	/* get estimated and desired vehicle attitude */
-	Quatf q(_v_att.q);
-	Quatf qd(_v_att_sp.q_d);
+//	/* get estimated and desired vehicle attitude */
+//	Quatf q(_v_att.q);
+//	Quatf qd(_v_att_sp.q_d);
 
-	/* ensure input quaternions are exactly normalized because acosf(1.00001) == NaN */
-	q.normalize();
-	qd.normalize();
+//	/* ensure input quaternions are exactly normalized because acosf(1.00001) == NaN */
+//	q.normalize();
+//	qd.normalize();
 
-	/* calculate reduced desired attitude neglecting vehicle's yaw to prioritize roll and pitch */
-	Vector3f e_z = q.dcm_z();
-	Vector3f e_z_d = qd.dcm_z();
-	Quatf qd_red(e_z, e_z_d);
+//	/* calculate reduced desired attitude neglecting vehicle's yaw to prioritize roll and pitch */
+//	Vector3f e_z = q.dcm_z();
+//	Vector3f e_z_d = qd.dcm_z();
+//	Quatf qd_red(e_z, e_z_d);
 
-	if (abs(qd_red(1)) > (1.f - 1e-5f) || abs(qd_red(2)) > (1.f - 1e-5f)) {
-		/* In the infinitesimal corner case where the vehicle and thrust have the completely opposite direction,
-		 * full attitude control anyways generates no yaw input and directly takes the combination of
-		 * roll and pitch leading to the correct desired yaw. Ignoring this case would still be totally safe and stable. */
-		qd_red = qd;
+//	if (abs(qd_red(1)) > (1.f - 1e-5f) || abs(qd_red(2)) > (1.f - 1e-5f)) {
+//		/* In the infinitesimal corner case where the vehicle and thrust have the completely opposite direction,
+//		 * full attitude control anyways generates no yaw input and directly takes the combination of
+//		 * roll and pitch leading to the correct desired yaw. Ignoring this case would still be totally safe and stable. */
+//		qd_red = qd;
 
-	} else {
-		/* transform rotation from current to desired thrust vector into a world frame reduced desired attitude */
-		qd_red *= q;
-	}
+//	} else {
+//		/* transform rotation from current to desired thrust vector into a world frame reduced desired attitude */
+//		qd_red *= q;
+//	}
 
-	/* mix full and reduced desired attitude */
-	Quatf q_mix = qd_red.inversed() * qd;
-	q_mix *= math::signNoZero(q_mix(0));
-	/* catch numerical problems with the domain of acosf and asinf */
-	q_mix(0) = math::constrain(q_mix(0), -1.f, 1.f);
-	q_mix(3) = math::constrain(q_mix(3), -1.f, 1.f);
-	qd = qd_red * Quatf(cosf(yaw_w * acosf(q_mix(0))), 0, 0, sinf(yaw_w * asinf(q_mix(3))));
+//	/* mix full and reduced desired attitude */
+//	Quatf q_mix = qd_red.inversed() * qd;
+//	q_mix *= math::signNoZero(q_mix(0));
+//	/* catch numerical problems with the domain of acosf and asinf */
+//	q_mix(0) = math::constrain(q_mix(0), -1.f, 1.f);
+//	q_mix(3) = math::constrain(q_mix(3), -1.f, 1.f);
+//	qd = qd_red * Quatf(cosf(yaw_w * acosf(q_mix(0))), 0, 0, sinf(yaw_w * asinf(q_mix(3))));
 
-	/* quaternion attitude control law, qe is rotation from q to qd */
-	Quatf qe = q.inversed() * qd;
+//	/* quaternion attitude control law, qe is rotation from q to qd */
+//	Quatf qe = q.inversed() * qd;
 
-	/* using sin(alpha/2) scaled rotation axis as attitude error (see quaternion definition by axis angle)
-	 * also taking care of the antipodal unit quaternion ambiguity */
-	Vector3f eq = 2.f * math::signNoZero(qe(0)) * qe.imag();
+//	/* using sin(alpha/2) scaled rotation axis as attitude error (see quaternion definition by axis angle)
+//	 * also taking care of the antipodal unit quaternion ambiguity */
+//	Vector3f eq = 2.f * math::signNoZero(qe(0)) * qe.imag();
 
-	/* calculate angular rates setpoint */
-	_rates_sp = eq.emult(attitude_gain);
+//	/* calculate angular rates setpoint */
+//	_rates_sp = eq.emult(attitude_gain);
 
 	/* Feed forward the yaw setpoint rate.
 	 * yaw_sp_move_rate is the feed forward commanded rotation around the world z-axis,
@@ -599,19 +599,19 @@ MulticopterAttitudeControl::control_attitude()
 	 * This yields a vector representing the commanded rotatation around the world z-axis expressed in the body frame
 	 * such that it can be added to the rates setpoint.
 	 */
-	_rates_sp += q.inversed().dcm_z() * _v_att_sp.yaw_sp_move_rate;
+//	_rates_sp += q.inversed().dcm_z() * _v_att_sp.yaw_sp_move_rate;
 
 
-	/* limit rates */
-	for (int i = 0; i < 3; i++) {
-		if ((_v_control_mode.flag_control_velocity_enabled || _v_control_mode.flag_control_auto_enabled) &&
-		    !_v_control_mode.flag_control_manual_enabled) {
-			_rates_sp(i) = math::constrain(_rates_sp(i), -_auto_rate_max(i), _auto_rate_max(i));
+//	/* limit rates */
+//	for (int i = 0; i < 3; i++) {
+//		if ((_v_control_mode.flag_control_velocity_enabled || _v_control_mode.flag_control_auto_enabled) &&
+//		    !_v_control_mode.flag_control_manual_enabled) {
+//			_rates_sp(i) = math::constrain(_rates_sp(i), -_auto_rate_max(i), _auto_rate_max(i));
 
-		} else {
-			_rates_sp(i) = math::constrain(_rates_sp(i), -_mc_rate_max(i), _mc_rate_max(i));
-		}
-	}
+//		} else {
+//			_rates_sp(i) = math::constrain(_rates_sp(i), -_mc_rate_max(i), _mc_rate_max(i));
+//		}
+//	}
 }
 
 /*
@@ -680,66 +680,66 @@ MulticopterAttitudeControl::control_attitude_rates(float dt)
 	rates(1) -= _sensor_bias.gyro_y_bias;
 	rates(2) -= _sensor_bias.gyro_z_bias;
 
-	Vector3f rates_p_scaled = _rate_p.emult(pid_attenuations(_tpa_breakpoint_p.get(), _tpa_rate_p.get()));
-	Vector3f rates_i_scaled = _rate_i.emult(pid_attenuations(_tpa_breakpoint_i.get(), _tpa_rate_i.get()));
-	Vector3f rates_d_scaled = _rate_d.emult(pid_attenuations(_tpa_breakpoint_d.get(), _tpa_rate_d.get()));
+//	Vector3f rates_p_scaled = _rate_p.emult(pid_attenuations(_tpa_breakpoint_p.get(), _tpa_rate_p.get()));
+//	Vector3f rates_i_scaled = _rate_i.emult(pid_attenuations(_tpa_breakpoint_i.get(), _tpa_rate_i.get()));
+//	Vector3f rates_d_scaled = _rate_d.emult(pid_attenuations(_tpa_breakpoint_d.get(), _tpa_rate_d.get()));
 
-	/* angular rates error */
-	Vector3f rates_err = _rates_sp - rates;
+//	/* angular rates error */
+//	Vector3f rates_err = _rates_sp - rates;
 
-	/* apply low-pass filtering to the rates for D-term */
-	Vector3f rates_filtered(_lp_filters_d.apply(rates));
+//	/* apply low-pass filtering to the rates for D-term */
+//	Vector3f rates_filtered(_lp_filters_d.apply(rates));
 
-	_att_control = rates_p_scaled.emult(rates_err) +
-		       _rates_int -
-		       rates_d_scaled.emult(rates_filtered - _rates_prev_filtered) / dt +
-		       _rate_ff.emult(_rates_sp);
+//	_att_control = rates_p_scaled.emult(rates_err) +
+//		       _rates_int -
+//		       rates_d_scaled.emult(rates_filtered - _rates_prev_filtered) / dt +
+//		       _rate_ff.emult(_rates_sp);
 
-	_rates_prev = rates;
-	_rates_prev_filtered = rates_filtered;
+//	_rates_prev = rates;
+//	_rates_prev_filtered = rates_filtered;
 
-	/* update integral only if we are not landed */
-	if (!_vehicle_land_detected.maybe_landed && !_vehicle_land_detected.landed) {
-		for (int i = AXIS_INDEX_ROLL; i < AXIS_COUNT; i++) {
-			// Check for positive control saturation
-			bool positive_saturation =
-				((i == AXIS_INDEX_ROLL) && _saturation_status.flags.roll_pos) ||
-				((i == AXIS_INDEX_PITCH) && _saturation_status.flags.pitch_pos) ||
-				((i == AXIS_INDEX_YAW) && _saturation_status.flags.yaw_pos);
+//	/* update integral only if we are not landed */
+//	if (!_vehicle_land_detected.maybe_landed && !_vehicle_land_detected.landed) {
+//		for (int i = AXIS_INDEX_ROLL; i < AXIS_COUNT; i++) {
+//			// Check for positive control saturation
+//			bool positive_saturation =
+//				((i == AXIS_INDEX_ROLL) && _saturation_status.flags.roll_pos) ||
+//				((i == AXIS_INDEX_PITCH) && _saturation_status.flags.pitch_pos) ||
+//				((i == AXIS_INDEX_YAW) && _saturation_status.flags.yaw_pos);
 
-			// Check for negative control saturation
-			bool negative_saturation =
-				((i == AXIS_INDEX_ROLL) && _saturation_status.flags.roll_neg) ||
-				((i == AXIS_INDEX_PITCH) && _saturation_status.flags.pitch_neg) ||
-				((i == AXIS_INDEX_YAW) && _saturation_status.flags.yaw_neg);
+//			// Check for negative control saturation
+//			bool negative_saturation =
+//				((i == AXIS_INDEX_ROLL) && _saturation_status.flags.roll_neg) ||
+//				((i == AXIS_INDEX_PITCH) && _saturation_status.flags.pitch_neg) ||
+//				((i == AXIS_INDEX_YAW) && _saturation_status.flags.yaw_neg);
 
-			// prevent further positive control saturation
-			if (positive_saturation) {
-				rates_err(i) = math::min(rates_err(i), 0.0f);
+//			// prevent further positive control saturation
+//			if (positive_saturation) {
+//				rates_err(i) = math::min(rates_err(i), 0.0f);
 
-			}
+//			}
 
-			// prevent further negative control saturation
-			if (negative_saturation) {
-				rates_err(i) = math::max(rates_err(i), 0.0f);
+//			// prevent further negative control saturation
+//			if (negative_saturation) {
+//				rates_err(i) = math::max(rates_err(i), 0.0f);
 
-			}
+//			}
 
-			// Perform the integration using a first order method and do not propagate the result if out of range or invalid
-			float rate_i = _rates_int(i) + rates_i_scaled(i) * rates_err(i) * dt;
+//			// Perform the integration using a first order method and do not propagate the result if out of range or invalid
+//			float rate_i = _rates_int(i) + rates_i_scaled(i) * rates_err(i) * dt;
 
-			if (PX4_ISFINITE(rate_i) && rate_i > -_rate_int_lim(i) && rate_i < _rate_int_lim(i)) {
-				_rates_int(i) = rate_i;
+//			if (PX4_ISFINITE(rate_i) && rate_i > -_rate_int_lim(i) && rate_i < _rate_int_lim(i)) {
+//				_rates_int(i) = rate_i;
 
-			}
-		}
-	}
+//			}
+//		}
+//	}
 
-	/* explicitly limit the integrator state */
-	for (int i = AXIS_INDEX_ROLL; i < AXIS_COUNT; i++) {
-		_rates_int(i) = math::constrain(_rates_int(i), -_rate_int_lim(i), _rate_int_lim(i));
+//	/* explicitly limit the integrator state */
+//	for (int i = AXIS_INDEX_ROLL; i < AXIS_COUNT; i++) {
+//		_rates_int(i) = math::constrain(_rates_int(i), -_rate_int_lim(i), _rate_int_lim(i));
 
-	}
+//	}
 
 
 
@@ -747,9 +747,30 @@ MulticopterAttitudeControl::control_attitude_rates(float dt)
     /*----CYW_ PX4 Modern Control--START------*/
     /*Author:Yiwen Chen*/
     /*Time:2019.01.16*/
-    /*git version:exp20190116v190aCYWMCv100*/
+    /*git version:exp20190116v190aCYWMCv110*/
     /*Abstract: Using Modern Control System to Control PX4 keep height*/
+    /*Update Log:
+     * v100:
+     *       Using Modern Control System to Control PX4 keep height
+     * v110:
+     *      1.Simple Flight Mission:1m 1.5m 2m
+     *      2.Safely return back to 0m
+    */
+
 if(cywmc_able){
+
+    /*Init running Time*/
+    if(_v_control_mode.flag_armed && _v_control_mode.flag_control_rates_enabled ){
+        if(arm_t0<1){
+        arm_t0=hrt_absolute_time();
+        }
+        run_t=(hrt_absolute_time()-arm_t0)/1000000;
+    }
+    else{
+        arm_t0=0;
+        run_t=0;
+    }
+
 
     //some cache (wasted)
     if(0){
@@ -824,11 +845,13 @@ if(cywmc_able){
         rate_roll=rates(0);
         rate_pitch=rates(1);
         rate_yaw=rates(2);
-        //            PX4_INFO("current_state=\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f",
-        //                     (double)Z,(double)agl_roll,
-        //                     (double)agl_pitch,(double)agl_yaw,
-        //                     (double)rate_Z,(double)rate_roll,
-        //                     (double)rate_pitch,(double)rate_yaw);
+            //            PX4_INFO("current_state=\n%f\n%f\n%f\n%f\n%f\n%f\n%f\n%f",
+            //                     (double)Z,(double)agl_roll,
+            //                     (double)agl_pitch,(double)agl_yaw,
+            //                     (double)rate_Z,(double)rate_roll,
+            //                     (double)rate_pitch,(double)rate_yaw);
+
+
 
 
 
@@ -846,24 +869,25 @@ if(cywmc_able){
         ss_B.setZero();
         ss_C.setZero();
         ss_D.setZero();
-        ss_G.setZero();
-        ss_G1.setZero();
-        ss_I4.setIdentity();
+        //ss_G.setZero();
+        //ss_G1.setZero();
+        //ss_I4.setIdentity();
         ss_G_scale.setZero();
 
 
 
-        ss_G_scale(0,0)=3;
+        ss_G_scale(0,0)=ss_G_scale_0;
         ss_G_scale(1,1)=0;
         ss_G_scale(2,2)=0;
         ss_G_scale(3,3)=0;
 
         /*r*/
-        ss_r(0,0)=100;
+        ss_r(0,0)=setout_Z;
         ss_r(0,1)=0;
         ss_r(0,2)=0;
         ss_r(0,3)=0;
         ss_r=ss_G_scale*ss_r;
+
         /*A*/
         ss_A(0,4)=1;
         ss_A(1,5)=1;
@@ -918,7 +942,7 @@ if(cywmc_able){
         /*G*/
 
         //ss_G1=ss_C*1;
-        ss_G.setZero();
+        //ss_G.setZero();
 
         /*SS Finished Initiatsing*/
         ss_seted=1;
@@ -928,9 +952,178 @@ if(cywmc_able){
         //ss_A=ss_A.inversed();
     }
 
+    /*Update r if needed in every loop*/
+    if(need_update_r){
+        /*r*/
+        ss_r(0,0)=setout_Z;
+        ss_r=ss_G_scale*ss_r;
+        need_update_r=0;
+    }
+    /*Mission*/
+    if(modern_control_mission_able){
+        mordern_control_able=1;
+        give_output_able=1;
+        //Mission 1 //1m 1.5m 2m
+        if(modern_control_mission_select==1){
+//            //Init Time Plan
+//            if(!is_msl_t_set){
+
+//            ms1_t[0]=1;//keep still
+//            ms1_t[1]=10;//rise and keep at 1m
+//            ms1_t[2]=10;//rise and keep at 1.5m
+//            ms1_t[3]=10;//rise and keep at 2m
+
+//            is_msl_t_set=1;
+//            }
+
+//            //Mission Content
+//            if(run_t<ms1_t[0]){
+//                give_output_able=0;
+//                _att_control(0)=0;//roll
+//                _att_control(1)=0;//pitch
+//                _att_control(2)=0;//yaw
+//                _thrust_sp=0;
+//            }
+//            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
+//                need_update_r=1;
+//                setout_Z=1;
+//            }
+//            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2])){
+//                need_update_r=1;
+//                setout_Z=1.5;
+//            }
+//            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2]+ms1_t[3])){
+//                need_update_r=1;
+//                setout_Z=2;
+//            }
+//            else{
+//                return_back_to_0m_able=1;
+//                modern_control_mission_select=0;
+//                start_return_back_runt=run_t;
+//            }
+//            if(loop_times%show_per_times==1){
+//                PX4_INFO("runt=%f",(double)run_t);
+//            }
+
+        }
+
+        //Mission 2 //1m
+        if(modern_control_mission_select==2){
+            //Init Time Plan
+            if(!is_msl_t_set){
+
+            ms1_t[0]=1;//keep still
+            ms1_t[1]=15;//rise and keep at 1m
+
+            is_msl_t_set=1;
+            }
+
+            //Mission Content
+            if(run_t<ms1_t[0]){
+                give_output_able=0;
+                _att_control(0)=0;//roll
+                _att_control(1)=0;//pitch
+                _att_control(2)=0;//yaw
+                _thrust_sp=0;
+            }
+            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
+                need_update_r=1;
+                setout_Z=1;
+            }
+            else{
+                return_back_to_0m_able=1;
+                modern_control_mission_select=0;
+                start_return_back_runt=run_t;
+            }
+            if(loop_times%show_per_times==1){
+                PX4_INFO("runt=%f",(double)run_t);
+            }
+        }
+        //Mission 3 //5m
+        if(modern_control_mission_select==3){
+//            //Init Time Plan
+//            if(!is_msl_t_set){
+
+//            ms1_t[0]=3;//keep still
+//            ms1_t[1]=50;//rise and keep at 1m
+
+//            is_msl_t_set=1;
+//            }
+
+//            //Mission Content
+//            if(run_t<ms1_t[0]){
+//                give_output_able=0;
+//                _att_control(0)=0;//roll
+//                _att_control(1)=0;//pitch
+//                _att_control(2)=0;//yaw
+//                _thrust_sp=0;
+//            }
+//            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
+//                need_update_r=1;
+//                setout_Z=5;
+//            }
+//            else{
+//                return_back_to_0m_able=1;
+//                modern_control_mission_select=0;
+//                start_return_back_runt=run_t;
+//            }
+//            if(loop_times%show_per_times==1){
+//                PX4_INFO("runt=%f",(double)run_t);
+//            }
+        }
+
+    }
+    else{
+        //stand still
+        give_output_able=0;
+//        _att_control(0)=0;//roll
+//        _att_control(1)=0;//pitch
+//        _att_control(2)=0;//yaw
+//        _thrust_sp=0;
+    }
+
+    /*Return Back To 0m*/
+
+    if(return_back_to_0m_able){
+
+        if(loop_times%show_per_times==1){
+            //PX4_INFO("I'm Now Going back to %f",(double)setout_Z);
+        }
+        need_update_r=1;
+
+        if(-Z<back_Z_aim/return_degress_rate){
+            back_Z_aim=-Z*return_degress_rate;
+            setout_Z=setout_Z*return_degress_rate;
+        }
+
+
+        //end return
+        if(setout_Z<0.25f){
+            setout_Z=0;
+            return_back_to_0m_able=1;
+            need_update_r=1;
+        }
+        if(-Z<0.1f){
+
+            //stand still
+            give_output_able=0;
+//            _att_control(0)=0;//roll
+//            _att_control(1)=0;//pitch
+//            _att_control(2)=0;//yaw
+//            _thrust_sp=0;
+//            setout_Z=0;
+            //return_back_to_0m_able=0;
+//            need_update_r=1;
+        }
+
+    }
+
+    if(loop_times%show_per_times==1){
+        PX4_INFO("I'm Now Going to h=%f m",(double)setout_Z);
+    }
 
     /* Main feedback control */
-    if(1){
+    if(mordern_control_able){
         ss_x(0,0)=-Z;
         ss_x(0,1)=agl_roll;
         ss_x(0,2)=agl_pitch;
@@ -947,31 +1140,73 @@ if(cywmc_able){
     }
 
     /*Give Output*/
-    if(1){
-        ss_u_scale(0,0)=ss_u_actual(0,0)/Mx_max;
-        ss_u_scale(0,1)=ss_u_actual(0,1)/My_max;
-        ss_u_scale(0,2)=ss_u_actual(0,2)/Mz_max;
-        ss_u_scale(0,3)=ss_u_actual(0,3)/T_max;
+    if(give_output_able){
+        //update max_M and max_T
+        if(1){
+            //update T_max
+            //T_current=
+//            float vel_deriv[3];
+//            _ekf.get_vel_deriv_ned(vel_deriv);
+//            lpos.ax = vel_deriv[0];
+//            lpos.ay = vel_deriv[1];
+//            lpos.az = vel_deriv[2];
+//            if(abs(ss_u_actual(0,0))>T_max){
+//                T_max=abs(ss_u_actual(0,0));
+//            }
+//            if(abs(ss_u_actual(0,1))>Mx_max){
+//                Mx_max=abs(ss_u_actual(0,1));
+//            }
+//            if(abs(ss_u_actual(0,2))>My_max){
+//                My_max=abs(ss_u_actual(0,2));
+//            }
+//            if(abs(ss_u_actual(0,3))>Mz_max){
+//                Mz_max=abs(ss_u_actual(0,3));
+//            }
+
+        }
+        //actual 为完成稳定，需要的力矩和力，
+        //T_max为(最大加速度+g)*m
+        //M_max为(最大角加速度)*J
+        //        ss_u_scale(0,0)=(ss_u_actual(0,0)+ss_m*g)/T_max;
+
+        //R可以为0,但u一直不为0。
+        ss_u_scale(0,0)=(ss_u_actual(0,0)+ss_m*g)/T_max;
+        //ss_u_scale(0,0)=ss_u_actual(0,0)/T_max;
+        ss_u_scale(0,1)=ss_u_actual(0,1)/Mx_max;
+        ss_u_scale(0,2)=ss_u_actual(0,2)/My_max;
+        ss_u_scale(0,3)=ss_u_actual(0,3)/Mz_max;
         _att_control(0)=ss_u_scale(0,1);//roll
         _att_control(1)=ss_u_scale(0,2);//pitch
         _att_control(2)=ss_u_scale(0,3);//yaw
-        _thrust_sp=ss_u_scale(0,0);
+        _thrust_sp=ss_u_scale(0,0);//trust
         //_att_control(3)=ss_u_scale(0,0);//thrust //Make it's bigger than gravity
         }
-
+    else{
+        _att_control(0)=0;//roll
+        _att_control(1)=0;//pitch
+        _att_control(2)=0;//yaw
+        _thrust_sp=0;
+    }
 
     /*Print Status Data to Chekc Error*/
     if(loop_times%show_per_times==1){
-//    PX4_INFO("_att_control=\n%f\n%f\n%f\n%f",
-//             (double)_att_control(0),
-//             (double)_att_control(1),
-//             (double)_att_control(2),
-//             (double)_att_control(3));
-//    PX4_INFO("ss_u_actual=\n%f\n%f\n%f\n%f",
-//             (double)ss_u_actual(0,0),
-//             (double)ss_u_actual(0,1),
-//             (double)ss_u_actual(0,2),
-//             (double)ss_u_actual(0,3));
+    PX4_INFO("_att_control=\n%f\n%f\n%f\n%f",
+             (double)_thrust_sp,
+             (double)_att_control(0),
+             (double)_att_control(1),
+             (double)_att_control(2)
+             );
+        PX4_INFO("ss_u_actual=\n%f\n%f\n%f\n%f",
+                 (double)ss_u_actual(0,0),
+                 (double)ss_u_actual(0,1),
+                 (double)ss_u_actual(0,2),
+                 (double)ss_u_actual(0,3));
+//        PX4_INFO("MAX_VALUE=\n%f\n%f\n%f\n%f",
+//                 (double)T_max,
+//                 (double)Mx_max,
+//                 (double)My_max,
+//                 (double)Mz_max
+//                 );
 //    PX4_INFO("ss_set=\n%d",
 //             (int)ss_seted);
 //    PX4_INFO("ss_r=\n%f\n%f\n%f\n%f",
@@ -985,11 +1220,11 @@ if(cywmc_able){
 //             (double)ss_k*ss_x(0,2),
 //             (double)ss_k*ss_x(0,3));
 
-//    PX4_INFO("ss_y=\n%f\n%f\n%f\n%f",
-//             (double)ss_y(0,0),
-//             (double)ss_y(0,1),
-//             (double)ss_y(0,2),
-//             (double)ss_y(0,3));
+    PX4_INFO("ss_y=\n%f\n%f\n%f\n%f",
+             (double)ss_y(0,0),
+             (double)ss_y(0,1),
+             (double)ss_y(0,2),
+             (double)ss_y(0,3));
 }
 
 
@@ -1000,21 +1235,28 @@ if(cywmc_able){
 }
 
 }
-    /*----CYW_ PX4 Modern Control--END------*/
 
 }
+
+//void scale_output(){
+//    _att_control(0)=0;//roll
+//    _att_control(1)=0;//pitch
+//    _att_control(2)=0;//yaw
+//    _thrust_sp=0;
+//}
+/*----CYW_ PX4 Modern Control--END------*/
 
 void
 MulticopterAttitudeControl::publish_rates_setpoint()
 {
-	_v_rates_sp.roll = _rates_sp(0);
-	_v_rates_sp.pitch = _rates_sp(1);
-	_v_rates_sp.yaw = _rates_sp(2);
-	_v_rates_sp.thrust_body[0] = 0.0f;
-	_v_rates_sp.thrust_body[1] = 0.0f;
-	_v_rates_sp.thrust_body[2] = -_thrust_sp;
-	_v_rates_sp.timestamp = hrt_absolute_time();
-	orb_publish_auto(ORB_ID(vehicle_rates_setpoint), &_v_rates_sp_pub, &_v_rates_sp, nullptr, ORB_PRIO_DEFAULT);
+//	_v_rates_sp.roll = _rates_sp(0);
+//	_v_rates_sp.pitch = _rates_sp(1);
+//	_v_rates_sp.yaw = _rates_sp(2);
+//	_v_rates_sp.thrust_body[0] = 0.0f;
+//	_v_rates_sp.thrust_body[1] = 0.0f;
+//	_v_rates_sp.thrust_body[2] = -_thrust_sp;
+//	_v_rates_sp.timestamp = hrt_absolute_time();
+//	orb_publish_auto(ORB_ID(vehicle_rates_setpoint), &_v_rates_sp_pub, &_v_rates_sp, nullptr, ORB_PRIO_DEFAULT);
 }
 
 void
