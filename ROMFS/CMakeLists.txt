@@ -126,32 +126,19 @@ if(config_bl_file)
 		)
 endif()
 
-set(OPTIONAL_BOARD_RC)
-list(APPEND OPTIONAL_BOARD_RC
-	rc.board_defaults
-	rc.board_sensors
-	rc.board_extras
-)
-
-foreach(board_rc_file ${OPTIONAL_BOARD_RC})
-
-	if(EXISTS "${PX4_BOARD_DIR}/init/${board_rc_file}")
-		message(STATUS "ROMFS: Adding ${board_rc_file}")
-
-		add_custom_command(OUTPUT ${romfs_gen_root_dir}/init.d/${board_rc_file}
-			COMMAND ${CMAKE_COMMAND} -E copy ${PX4_BOARD_DIR}/init/${board_rc_file} ${romfs_gen_root_dir}/init.d/${board_rc_file}
-			DEPENDS
-				${PX4_BOARD_DIR}/init/${board_rc_file}
-				${romfs_gen_root_dir}/init.d/rcS
-			COMMENT "ROMFS: copying ${board_rc_file}"
+if(EXISTS "${PX4_BOARD_DIR}/init/rc.board")
+	add_custom_command(OUTPUT ${romfs_gen_root_dir}/init.d/rc.board
+		COMMAND ${CMAKE_COMMAND} -E copy ${PX4_BOARD_DIR}/init/rc.board ${romfs_gen_root_dir}/init.d/rc.board
+		DEPENDS
+			${PX4_BOARD_DIR}/init/rc.board
+			${romfs_gen_root_dir}/init.d/rcS
+		COMMENT "ROMFS: copying rc.board"
 		)
 
-		list(APPEND extras_dependencies
-			${romfs_gen_root_dir}/init.d/${board_rc_file}
-			)
-	endif()
-
-endforeach()
+	list(APPEND extras_dependencies
+		${romfs_gen_root_dir}/init.d/rc.board
+		)
+endif()
 
 add_custom_command(OUTPUT romfs_extras.stamp
 	COMMAND ${CMAKE_COMMAND} -E make_directory ${romfs_gen_root_dir}/extras/

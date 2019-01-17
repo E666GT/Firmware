@@ -1,8 +1,22 @@
-#!/bin/sh
+#!nsh
 #
-# Bitcraze Crazyflie specific board sensors init
+# Bitcraze Crazyflie specific board init
+#
 #------------------------------------------------------------------------------
+#
 
+if param compare SYS_AUTOSTART 0
+then
+	param set SYS_AUTOSTART 4900
+	set AUTOCNF yes
+fi
+
+if [ $AUTOCNF = yes ]
+then
+
+fi
+
+set MIXER_AUX none
 
 # Onboard I2C
 mpu9250 -R 12 start
