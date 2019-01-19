@@ -305,7 +305,7 @@ private:
 
         /*Mission Params*/
         bool modern_control_mission_able=1;  //able to mission
-        int modern_control_mission_select=2;
+        int modern_control_mission_select=1;
         //mission 0: pass;
         //mission 1: 1m 1.5m 2m 0m
         //mission 2: 1m
@@ -342,11 +342,16 @@ private:
         //matrix::SquareMatrix<float,4> ss_G;     /*Transfer Function*/
         //matrix::SquareMatrix<float,4> ss_G1;    /*Transfer Function part 1*/
         //matrix::SquareMatrix<float,4> ss_I4;    /*diag=1,cols=4*/
-
-        matrix::Matrix<float,4,4> ss_test;
+        //matrix::Matrix<float,4,4> ss_test;
         int ss_seted=0;                         /*=1,ss already seted; =0,ss not seted*/
 
-
+        bool get_acc_able=1;
+        float this_z=0;
+        float last_z=0;
+        float this_vel=0;
+        float last_vel=0;
+        float this_acc=0;
+        float T_now=0;
 
         /*DIY output*/
         float setout_Z=5;
@@ -367,9 +372,10 @@ private:
         float ss_Iyy=0.05;//temp assume
         float ss_Izz=0.25;//temp assume
         float g=9.80;//gravity
-        float T_max=29.75;//=24.6*m =(max_a+g)*m,max_a=14;
+        //float T_max=29.75;//=24.6*m =(max_a+g)*m,max_a=14;
+        float T_max=21.81;//for gazebo irsi. hovering, T=thrust_control*T_max=mg
         //float T_max=5;//temp assume
-        float ss_G_scale_0=6;
+        float ss_G_scale_0=2.8;
         float Mx_max=2;//temp assume
         float My_max=2;//temp assume
         float Mz_max=2;//temp assume

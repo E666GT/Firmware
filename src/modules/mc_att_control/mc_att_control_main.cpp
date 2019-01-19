@@ -765,6 +765,8 @@ if(cywmc_able){
         arm_t0=hrt_absolute_time();
         }
         run_t=(hrt_absolute_time()-arm_t0)/1000000;
+
+
     }
     else{
         arm_t0=0;
@@ -965,45 +967,45 @@ if(cywmc_able){
         give_output_able=1;
         //Mission 1 //1m 1.5m 2m
         if(modern_control_mission_select==1){
-//            //Init Time Plan
-//            if(!is_msl_t_set){
+            //Init Time Plan
+            if(!is_msl_t_set){
 
-//            ms1_t[0]=1;//keep still
-//            ms1_t[1]=10;//rise and keep at 1m
-//            ms1_t[2]=10;//rise and keep at 1.5m
-//            ms1_t[3]=10;//rise and keep at 2m
+            ms1_t[0]=5;//keep still
+            ms1_t[1]=15;//rise and keep at 1m
+            ms1_t[2]=15;//rise and keep at 1.5m
+            ms1_t[3]=15;//rise and keep at 2m
 
-//            is_msl_t_set=1;
-//            }
+            is_msl_t_set=1;
+            }
 
-//            //Mission Content
-//            if(run_t<ms1_t[0]){
-//                give_output_able=0;
-//                _att_control(0)=0;//roll
-//                _att_control(1)=0;//pitch
-//                _att_control(2)=0;//yaw
-//                _thrust_sp=0;
-//            }
-//            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
-//                need_update_r=1;
-//                setout_Z=1;
-//            }
-//            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2])){
-//                need_update_r=1;
-//                setout_Z=1.5;
-//            }
-//            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2]+ms1_t[3])){
-//                need_update_r=1;
-//                setout_Z=2;
-//            }
-//            else{
-//                return_back_to_0m_able=1;
-//                modern_control_mission_select=0;
-//                start_return_back_runt=run_t;
-//            }
-//            if(loop_times%show_per_times==1){
-//                PX4_INFO("runt=%f",(double)run_t);
-//            }
+            //Mission Content
+            if(run_t<ms1_t[0]){
+                give_output_able=0;
+                _att_control(0)=0;//roll
+                _att_control(1)=0;//pitch
+                _att_control(2)=0;//yaw
+                _thrust_sp=0;
+            }
+            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
+                need_update_r=1;
+                setout_Z=1;
+            }
+            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2])){
+                need_update_r=1;
+                setout_Z=1.5;
+            }
+            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2]+ms1_t[3])){
+                need_update_r=1;
+                setout_Z=2;
+            }
+            else{
+                return_back_to_0m_able=1;
+                modern_control_mission_select=0;
+                start_return_back_runt=run_t;
+            }
+            if(loop_times%show_per_times==1){
+                PX4_INFO("runt=%f",(double)run_t);
+            }
 
         }
 
@@ -1012,8 +1014,8 @@ if(cywmc_able){
             //Init Time Plan
             if(!is_msl_t_set){
 
-            ms1_t[0]=1;//keep still
-            ms1_t[1]=15;//rise and keep at 1m
+            ms1_t[0]=5;//keep still
+            ms1_t[1]=20;//rise and keep at 1m
 
             is_msl_t_set=1;
             }
@@ -1143,15 +1145,22 @@ if(cywmc_able){
     if(give_output_able){
         //update max_M and max_T
         if(1){
-            //update T_max
-            //T_current=
-//            float vel_deriv[3];
-//            _ekf.get_vel_deriv_ned(vel_deriv);
-//            lpos.ax = vel_deriv[0];
-//            lpos.ay = vel_deriv[1];
-//            lpos.az = vel_deriv[2];
-//            if(abs(ss_u_actual(0,0))>T_max){
-//                T_max=abs(ss_u_actual(0,0));
+//            if(get_acc_able){
+//                this_z=-Z;
+//                this_vel=-pos_current.vz;
+//                if(last_z>0.f && last_vel>0.f){this_acc=(this_vel-last_vel)/dt;}
+//                last_z=this_z;
+//                last_vel=this_vel;
+//                //PX4_INFO("this_acc=%f",(double)this_acc);
+//                //PX4_INFO("this_vel=%f",(double)this_vel);
+//            }
+//            //update T_max
+//            if(this_acc>0.f && this_acc < 40.f){
+//            T_now=ss_m*(this_acc+g);
+//            if(T_now>T_max){
+//                T_max=T_now;
+//                PX4_INFO("update this_acc=%f",(double)this_acc);
+//            }
 //            }
 //            if(abs(ss_u_actual(0,1))>Mx_max){
 //                Mx_max=abs(ss_u_actual(0,1));
@@ -1201,12 +1210,12 @@ if(cywmc_able){
                  (double)ss_u_actual(0,1),
                  (double)ss_u_actual(0,2),
                  (double)ss_u_actual(0,3));
-//        PX4_INFO("MAX_VALUE=\n%f\n%f\n%f\n%f",
-//                 (double)T_max,
-//                 (double)Mx_max,
-//                 (double)My_max,
-//                 (double)Mz_max
-//                 );
+        PX4_INFO("MAX_VALUE=\n%f\n%f\n%f\n%f",
+                 (double)T_max,
+                 (double)Mx_max,
+                 (double)My_max,
+                 (double)Mz_max
+                 );
 //    PX4_INFO("ss_set=\n%d",
 //             (int)ss_seted);
 //    PX4_INFO("ss_r=\n%f\n%f\n%f\n%f",
