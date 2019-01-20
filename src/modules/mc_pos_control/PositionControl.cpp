@@ -56,6 +56,9 @@ void PositionControl::updateState(const PositionControlStates &states)
 
 bool PositionControl::updateSetpoint(const vehicle_local_position_setpoint_s &setpoint)
 {
+
+
+
 	_pos_sp = Vector3f(setpoint.x, setpoint.y, setpoint.z);
 	_vel_sp = Vector3f(setpoint.vx, setpoint.vy, setpoint.vz);
 	_acc_sp = Vector3f(setpoint.acc_x, setpoint.acc_y, setpoint.acc_z);
@@ -70,6 +73,8 @@ bool PositionControl::updateSetpoint(const vehicle_local_position_setpoint_s &se
 			   && PX4_ISFINITE(setpoint.thrust[2]);
 
 	return mapping_succeeded;
+
+
 }
 
 void PositionControl::generateThrustYawSetpoint(const float dt)
@@ -198,7 +203,158 @@ bool PositionControl::_interfaceMapping()
 
 void PositionControl::_positionController()
 {
-	// P-position controller
+
+if(diy_setout_able){
+    /*Get Arm status*/
+    int _v_control_mode_sub = orb_subscribe(ORB_ID(vehicle_control_mode));
+    bool control_mode_updated;
+    orb_check(_v_control_mode_sub, &control_mode_updated);
+    if (control_mode_updated) {
+        orb_copy(ORB_ID(vehicle_control_mode), _v_control_mode_sub, &_v_control_mode);
+    }
+
+    /*Init running Time*/
+    if(_v_control_mode.flag_armed && _v_control_mode.flag_control_rates_enabled ){
+        if(arm_t0<1){
+        arm_t0=hrt_absolute_time();
+        }
+        run_t=(hrt_absolute_time()-arm_t0)/1000000;
+    }
+    else{
+        arm_t0=0;
+        run_t=0;
+    }
+
+    //CYWMC SETOUT Z
+    //TIME:20190120
+    loop_times++;
+    //_pos_sp(2)=-1.f;//setout_z=1m
+    if(loop_times%show_per_loop_times==1){
+        //PX4_INFO("_pos_sp:\n%f\n%f\n%f",(double)_pos_sp(0),(double)_pos_sp(1),(double)_pos_sp(2));
+        PX4_INFO("run_t:\n%f",(double)run_t);
+
+        /*Mission*/
+        if(modern_control_mission_able){
+            mordern_control_able=1;
+            give_output_able=1;
+            //Mission 1 //1m 1.5m 2m
+            if(modern_control_mission_select==1){
+                //Init Time Plan
+                if(!is_msl_t_set){
+
+                ms1_t[0]=1;//keep still
+                ms1_t[1]=10;//rise and keep at 1m
+                ms1_t[2]=10;//rise and keep at 1.5m
+                ms1_t[3]=10;//rise and keep at 2m
+
+                is_msl_t_set=1;
+                }
+
+                //Mission Content
+                if(run_t<ms1_t[0]){
+                    give_output_able=0;
+                    _att_control(0)=0;//roll
+                    _att_control(1)=0;//pitch
+                    _att_control(2)=0;//yaw
+                    _thrust_sp=0;
+                }
+                else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
+                    need_update_r=1;
+                    setout_Z=1;
+                }
+                else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2])){
+                    need_update_r=1;
+                    setout_Z=1.5;
+                }
+                else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2]+ms1_t[3])){
+                    need_update_r=1;
+                    setout_Z=2;
+                }
+                else{
+                    return_back_to_0m_able=1;
+                    modern_control_mission_select=0;
+                    start_return_back_runt=run_t;
+                }
+                if(loop_times%show_per_times==1){
+                    PX4_INFO("runt=%f",(double)run_t);
+                }
+
+            }
+
+            //Mission 2 //1m
+            if(modern_control_mission_select==2){
+                //Init Time Plan
+                if(!is_msl_t_set){
+
+                ms1_t[0]=1;//keep still
+                ms1_t[1]=15;//rise and keep at 1m
+
+                is_msl_t_set=1;
+                }
+
+                //Mission Content
+                if(run_t<ms1_t[0]){
+                    give_output_able=0;
+                    _att_control(0)=0;//roll
+                    _att_control(1)=0;//pitch
+                    _att_control(2)=0;//yaw
+                    _thrust_sp=0;
+                }
+                else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
+                    need_update_r=1;
+                    setout_Z=1;
+                }
+                else{
+                    return_back_to_0m_able=1;
+                    modern_control_mission_select=0;
+                    start_return_back_runt=run_t;
+                }
+                if(loop_times%show_per_times==1){
+                    PX4_INFO("runt=%f",(double)run_t);
+                }
+            }
+            //Mission 3 //5m
+            if(modern_control_mission_select==3){
+    //            //Init Time Plan
+    //            if(!is_msl_t_set){
+
+    //            ms1_t[0]=3;//keep still
+    //            ms1_t[1]=50;//rise and keep at 1m
+
+    //            is_msl_t_set=1;
+    //            }
+
+    //            //Mission Content
+    //            if(run_t<ms1_t[0]){
+    //                give_output_able=0;
+    //                _att_control(0)=0;//roll
+    //                _att_control(1)=0;//pitch
+    //                _att_control(2)=0;//yaw
+    //                _thrust_sp=0;
+    //            }
+    //            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
+    //                need_update_r=1;
+    //                setout_Z=5;
+    //            }
+    //            else{
+    //                return_back_to_0m_able=1;
+    //                modern_control_mission_select=0;
+    //                start_return_back_runt=run_t;
+    //            }
+    //            if(loop_times%show_per_times==1){
+    //                PX4_INFO("runt=%f",(double)run_t);
+    //            }
+            }
+
+        }
+        else{
+        }
+
+
+
+    }
+}
+    // P-position controller
 	const Vector3f vel_sp_position = (_pos_sp - _pos).emult(Vector3f(MPC_XY_P.get(), MPC_XY_P.get(), MPC_Z_P.get()));
 	_vel_sp = vel_sp_position + _vel_sp;
 
