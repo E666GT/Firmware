@@ -305,7 +305,7 @@ private:
 
         /*Mission Params*/
         bool modern_control_mission_able=1;  //able to mission
-        int modern_control_mission_select=1;
+        int modern_control_mission_select=2;
         //mission 0: pass;
         //mission 1: 1m 1.5m 2m 0m
         //mission 2: 1m
@@ -373,7 +373,9 @@ private:
         float ss_Izz=0.25;//temp assume
         float g=9.80;//gravity
         //float T_max=29.75;//=24.6*m =(max_a+g)*m,max_a=14;
-        float T_max=21.81;//for gazebo irsi. hovering, T=thrust_control*T_max=mg
+        //float T_max=21.81;//for gazebo irsi. hovering, T=thrust_control*T_max=mg
+        float T_max=30;//temp test:for gazebo irsi. hovering, T=thrust_control*T_max=mg
+        //float T_max=33.5;//for Real Copter 3.3+0.05kg.
         //float T_max=5;//temp assume
         float ss_G_scale_0=2.8;
         float Mx_max=2;//temp assume
