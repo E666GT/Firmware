@@ -229,9 +229,6 @@ if(diy_setout_able){
     //TIME:20190120
     loop_times++;
     //_pos_sp(2)=-1.f;//setout_z=1m
-    if(loop_times%show_per_loop_times==1){
-        //PX4_INFO("_pos_sp:\n%f\n%f\n%f",(double)_pos_sp(0),(double)_pos_sp(1),(double)_pos_sp(2));
-        PX4_INFO("run_t:\n%f",(double)run_t);
 
         /*Mission*/
         if(modern_control_mission_able){
@@ -252,28 +249,19 @@ if(diy_setout_able){
 
                 //Mission Content
                 if(run_t<ms1_t[0]){
-                    give_output_able=0;
-                    _att_control(0)=0;//roll
-                    _att_control(1)=0;//pitch
-                    _att_control(2)=0;//yaw
-                    _thrust_sp=0;
+
                 }
                 else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
-                    need_update_r=1;
-                    setout_Z=1;
+
                 }
                 else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2])){
-                    need_update_r=1;
-                    setout_Z=1.5;
+
                 }
                 else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2]+ms1_t[3])){
-                    need_update_r=1;
-                    setout_Z=2;
+
                 }
                 else{
-                    return_back_to_0m_able=1;
-                    modern_control_mission_select=0;
-                    start_return_back_runt=run_t;
+
                 }
                 if(loop_times%show_per_times==1){
                     PX4_INFO("runt=%f",(double)run_t);
@@ -287,30 +275,25 @@ if(diy_setout_able){
                 if(!is_msl_t_set){
 
                 ms1_t[0]=1;//keep still
-                ms1_t[1]=15;//rise and keep at 1m
+                ms1_t[1]=30;//rise and keep at 1m
 
                 is_msl_t_set=1;
                 }
 
                 //Mission Content
                 if(run_t<ms1_t[0]){
-                    give_output_able=0;
-                    _att_control(0)=0;//roll
-                    _att_control(1)=0;//pitch
-                    _att_control(2)=0;//yaw
-                    _thrust_sp=0;
+                    setout_Z=0.1;
                 }
                 else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
-                    need_update_r=1;
-                    setout_Z=1;
+                    setout_Z=-1;
                 }
                 else{
-                    return_back_to_0m_able=1;
-                    modern_control_mission_select=0;
-                    start_return_back_runt=run_t;
+                    setout_Z=0;
+                    modern_control_mission_able=0;
+                    diy_setout_able=0;
                 }
                 if(loop_times%show_per_times==1){
-                    PX4_INFO("runt=%f",(double)run_t);
+                    //PX4_INFO("runt=%f",(double)run_t);
                 }
             }
             //Mission 3 //5m
@@ -351,8 +334,14 @@ if(diy_setout_able){
         }
 
 
+        _pos_sp(2)=setout_Z;
+        if(loop_times%show_per_times==1){
+            PX4_INFO("_pos_sp:\n%f\n%f\n%f",(double)_pos_sp(0),(double)_pos_sp(1),(double)_pos_sp(2));
+            PX4_INFO("run_t:\n%f",(double)run_t);
+            PX4_INFO("_pos:\n%f\n%f\n%f",(double)_pos(0),(double)_pos(1),(double)_pos(2));
 
-    }
+        }
+        orb_unsubscribe(_v_control_mode_sub);
 }
     // P-position controller
 	const Vector3f vel_sp_position = (_pos_sp - _pos).emult(Vector3f(MPC_XY_P.get(), MPC_XY_P.get(), MPC_Z_P.get()));

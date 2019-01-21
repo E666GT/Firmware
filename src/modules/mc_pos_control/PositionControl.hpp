@@ -221,8 +221,8 @@ private:
     //
     struct vehicle_control_mode_s		_v_control_mode {};
     int loop_times=0;
-    int show_per_loop_times=5;
-
+    int show_per_times=100;
+    float setout_Z=0;
 
     bool diy_setout_able=1;
     bool need_update_r=0; //1, r will be update in every loop
