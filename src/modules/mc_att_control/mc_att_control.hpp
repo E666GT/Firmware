@@ -376,6 +376,8 @@ private:
         //float T_max=21.81;//for gazebo irsi. hovering, T=thrust_control*T_max=mg
         float T_max=30;//temp test:for gazebo irsi. hovering, T=thrust_control*T_max=mg
         //float T_max=33.5;//for Real Copter 3.3+0.05kg.
+        //float T_max=60;//for Real Copter 3.3+0.05kg.
+
         //float T_max=5;//temp assume
         float ss_G_scale_0=2.8;
         float Mx_max=2;//temp assume
