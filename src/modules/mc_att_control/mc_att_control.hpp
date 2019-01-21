@@ -297,6 +297,8 @@ private:
         bool need_update_r=0; //1, r will be update in every loop
 
         bool give_output_able=1; //1,give_output_able
+        bool cywmc_angle_control=1;//0, use oringinal PID angle control to keep x,y=0.
+
         float run_t=0;
         //float start_t=3;
         //float keep_t=10;
@@ -311,6 +313,7 @@ private:
         //mission 2: 1m
         bool return_back_to_0m_able=0; //1,it will safely return back to 0m
         bool mordern_control_able=1; //1,mordern_control_able
+        int safety_return_time=60;//runt>safe time,exit CYWMC
             /*Return_Back_To_0m*/
             float setout_Z_last=0;
             float back_Z_aim=1000;
@@ -373,8 +376,8 @@ private:
         float ss_Izz=0.25;//temp assume
         float g=9.80;//gravity
         //float T_max=29.75;//=24.6*m =(max_a+g)*m,max_a=14;
-        //float T_max=21.81;//for gazebo irsi. hovering, T=thrust_control*T_max=mg
-        float T_max=30;//temp test:for gazebo irsi. hovering, T=thrust_control*T_max=mg
+        float T_max=21.81;//for gazebo irsi. hovering, T=thrust_control*T_max=mg
+        //float T_max=30;//temp test:for gazebo irsi. hovering, T=thrust_control*T_max=mg
         //float T_max=33.5;//for Real Copter 3.3+0.05kg.
         //float T_max=60;//for Real Copter 3.3+0.05kg.
 

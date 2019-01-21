@@ -1015,7 +1015,7 @@ if(cywmc_able){
             if(!is_msl_t_set){
 
             ms1_t[0]=5;//keep still
-            ms1_t[1]=20;//rise and keep at 1m
+            ms1_t[1]=35;//rise and keep at 1m
 
             is_msl_t_set=1;
             }
@@ -1030,7 +1030,7 @@ if(cywmc_able){
             }
             else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
                 need_update_r=1;
-                setout_Z=1;
+                setout_Z=2;
             }
             else{
                 return_back_to_0m_able=1;
@@ -1085,8 +1085,12 @@ if(cywmc_able){
     }
 
     /*Return Back To 0m*/
-
+    if(run_t>safety_return_time){
+        cywmc_able=0;
+    }
     if(return_back_to_0m_able){
+
+
 
         if(loop_times%show_per_times==1){
             //PX4_INFO("I'm Now Going back to %f",(double)setout_Z);
@@ -1184,16 +1188,20 @@ if(cywmc_able){
         ss_u_scale(0,1)=ss_u_actual(0,1)/Mx_max;
         ss_u_scale(0,2)=ss_u_actual(0,2)/My_max;
         ss_u_scale(0,3)=ss_u_actual(0,3)/Mz_max;
+        if(cywmc_angle_control){
         _att_control(0)=ss_u_scale(0,1);//roll
         _att_control(1)=ss_u_scale(0,2);//pitch
         _att_control(2)=ss_u_scale(0,3);//yaw
+        }
         _thrust_sp=ss_u_scale(0,0);//trust
         //_att_control(3)=ss_u_scale(0,0);//thrust //Make it's bigger than gravity
         }
     else{
+        if(cywmc_angle_control){
         _att_control(0)=0;//roll
         _att_control(1)=0;//pitch
         _att_control(2)=0;//yaw
+        }
         _thrust_sp=0;
     }
 
