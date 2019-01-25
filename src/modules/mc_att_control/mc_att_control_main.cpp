@@ -1009,13 +1009,13 @@ if(cywmc_able){
 
         }
 
-        //Mission 2 //1m
+        //Mission 2 //x m
         if(modern_control_mission_select==2){
             //Init Time Plan
             if(!is_msl_t_set){
 
-            ms1_t[0]=5;//keep still
-            ms1_t[1]=35;//rise and keep at 1m
+            ms1_t[0]=mission_2_time_still;//keep still
+            ms1_t[1]=mission_2_time_height;//rise and keep at 1m
 
             is_msl_t_set=1;
             }
@@ -1030,7 +1030,7 @@ if(cywmc_able){
             }
             else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
                 need_update_r=1;
-                setout_Z=2;
+                setout_Z=mission_2_setout_Z;
             }
             else{
                 return_back_to_0m_able=1;
@@ -1097,19 +1097,19 @@ if(cywmc_able){
         }
         need_update_r=1;
 
-        if(-Z<back_Z_aim/return_degress_rate){
+        if(-Z<back_Z_aim/return_degress_rate && setout_Z>=0.25f){
             back_Z_aim=-Z*return_degress_rate;
             setout_Z=setout_Z*return_degress_rate;
+            PX4_INFO("RETURN Z UPDATED!:I'm Now Going back to %f",(double)setout_Z);
         }
 
 
         //end return
         if(setout_Z<0.25f){
             setout_Z=0;
-            return_back_to_0m_able=1;
             need_update_r=1;
         }
-        if(-Z<0.1f){
+        if(-Z<0.2f){
 
             //stand still
             give_output_able=0;

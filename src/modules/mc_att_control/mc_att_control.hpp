@@ -311,9 +311,13 @@ private:
         //mission 0: pass;
         //mission 1: 1m 1.5m 2m 0m
         //mission 2: 1m
+            float mission_2_setout_Z=4;
+            int  mission_2_time_still=5;
+            int  mission_2_time_height=15;
+
         bool return_back_to_0m_able=0; //1,it will safely return back to 0m
         bool mordern_control_able=1; //1,mordern_control_able
-        int safety_return_time=60;//runt>safe time,exit CYWMC
+        int safety_return_time=40;//runt>safe time,exit CYWMC
             /*Return_Back_To_0m*/
             float setout_Z_last=0;
             float back_Z_aim=1000;
@@ -376,17 +380,18 @@ private:
         float ss_Izz=0.25;//temp assume
         float g=9.80;//gravity
         //float T_max=29.75;//=24.6*m =(max_a+g)*m,max_a=14;
-        float T_max=21.81;//for gazebo irsi. hovering, T=thrust_control*T_max=mg
+        //float T_max=21.81;//for gazebo irsi. hovering, T=thrust_control*T_max=mg
         //float T_max=30;//temp test:for gazebo irsi. hovering, T=thrust_control*T_max=mg
         //float T_max=33.5;//for Real Copter 3.3+0.05kg.
         //float T_max=60;//for Real Copter 3.3+0.05kg.
+        float T_max=36;//
 
         //float T_max=5;//temp assume
-        float ss_G_scale_0=2.8;
+        float ss_G_scale_0=3.5;
         float Mx_max=2;//temp assume
         float My_max=2;//temp assume
         float Mz_max=2;//temp assume
-        //float T_current=0;
+        //float T_curent=0;
 //        typedef struct {
 //                /* This part of the struct is POSIX-like */
 //                int		fd;       /* The descriptor being polled */
