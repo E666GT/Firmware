@@ -221,11 +221,10 @@ private:
     //
     struct vehicle_control_mode_s		_v_control_mode {};
     int loop_times=0;
-    int show_per_times=100;
+    int show_per_times=10;
     float setout_Z=0;
 
     bool diy_setout_able=1;
-    bool need_update_r=0; //1, r will be update in every loop
 
     bool give_output_able=1; //1,give_output_able
     float run_t=0;
@@ -237,21 +236,8 @@ private:
     //mission 0: pass;
     //mission 1: 1m 1.5m 2m 0m
     //mission 2: 1m
-    bool return_back_to_0m_able=0; //1,it will safely return back to 0m
-    bool mordern_control_able=1; //1,mordern_control_able
-        /*Return_Back_To_0m*/
-        float setout_Z_last=0;
-        float back_Z_aim=1000;
-        float back_Z_aim_dt=0;
-        float start_return_back_runt=0;
-        float return_degress_rate=0.95;
-        //float return_degress_value=0.1;
-        //int return_steps=0;
-        //float return_step_time=1;
-        //int return_back_loop_times=0;
-        /*Mission 1:1m 1.5m 2m 0m*/
-        int ms1_t[10];
-        bool is_msl_t_set=0;
+    int ms1_t[10];
+    bool is_msl_t_set=0;
 
 
 };
