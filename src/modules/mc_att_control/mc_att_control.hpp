@@ -307,13 +307,13 @@ private:
 
         /*Mission Params*/
         bool modern_control_mission_able=1;  //able to mission
-        int modern_control_mission_select=2;
+        int modern_control_mission_select=4;
         //mission 0: pass;
         //mission 1: 1m 1.5m 2m 0m
         //mission 2: 1m
-            float mission_2_setout_Z=4;
+            float mission_2_setout_Z=7;
             int  mission_2_time_still=5;
-            int  mission_2_time_height=15;
+            int  mission_2_time_height=20;
 
         bool return_back_to_0m_able=0; //1,it will safely return back to 0m
         bool mordern_control_able=1; //1,mordern_control_able
@@ -323,7 +323,7 @@ private:
             float back_Z_aim=1000;
             float back_Z_aim_dt=0;
             float start_return_back_runt=0;
-            float return_degress_rate=0.95;
+            float return_degress_rate=0.98;
             //float return_degress_value=0.1;
             //int return_steps=0;
             //float return_step_time=1;
@@ -361,7 +361,10 @@ private:
         float T_now=0;
 
         /*DIY output*/
-        float setout_Z=5;
+        float setout_Z=0;
+        float setout_yaw=0;
+        float setout_roll=0;
+        float setout_pitch=0;
         float setout_phi=0;
         float setout_theta=0;
         float setout_psi=0;
@@ -372,7 +375,7 @@ private:
 //        float end_t=30; //机体开始运动的时间
 //        int loop_times=0;
 //        float arm_t0=0; //定义从系统启动，到解锁arm的时间，单位10^-6秒
-        int show_per_times=250; //每x个循环后，展示一次数据报告
+        int show_per_times=100; //每x个循环后，展示一次数据报告
 
         float ss_m=1.25; //temp assume
         float ss_Ixx=0.05;//temp assume
@@ -380,17 +383,20 @@ private:
         float ss_Izz=0.25;//temp assume
         float g=9.80;//gravity
         //float T_max=29.75;//=24.6*m =(max_a+g)*m,max_a=14;
-        //float T_max=21.81;//for gazebo irsi. hovering, T=thrust_control*T_max=mg
-        //float T_max=30;//temp test:for gazebo irsi. hovering, T=thrust_control*T_max=mg
-        //float T_max=33.5;//for Real Copter 3.3+0.05kg.
-        //float T_max=60;//for Real Copter 3.3+0.05kg.
-        float T_max=36;//
+        float T_max=21.81;//for gazebo irsi. hovering, T=thrust_control*T_max=mg
+        ////float T_max=30;//temp test:for gazebo irsi. hovering, T=thrust_control*T_max=mg
+        ////float T_max=33.5;//for Real Copter 3.3+0.05kg.
+        ////float T_max=60;//for Real Copter 3.3+0.05kg.
+        //float T_max=70;//for real copter test avaliable.latest 20190306
 
         //float T_max=5;//temp assume
-        float ss_G_scale_0=3.5;
+        float ss_G_scale_0=5;
+        float ss_G_scale_1=1;
+        float ss_G_scale_2=1;
+        float ss_G_scale_3=1;
         float Mx_max=2;//temp assume
         float My_max=2;//temp assume
-        float Mz_max=2;//temp assume
+        float Mz_max=1;//temp assume
         //float T_curent=0;
 //        typedef struct {
 //                /* This part of the struct is POSIX-like */

@@ -879,9 +879,9 @@ if(cywmc_able){
 
 
         ss_G_scale(0,0)=ss_G_scale_0;
-        ss_G_scale(1,1)=0;
-        ss_G_scale(2,2)=0;
-        ss_G_scale(3,3)=0;
+        ss_G_scale(1,1)=ss_G_scale_1;
+        ss_G_scale(2,2)=ss_G_scale_2;
+        ss_G_scale(3,3)=ss_G_scale_3;
 
         /*r*/
         ss_r(0,0)=setout_Z;
@@ -936,9 +936,9 @@ if(cywmc_able){
 
         /*Setout y*/
         ss_setout_y(0,0)=setout_Z;
-        ss_setout_y(0,1)=setout_phi;
-        ss_setout_y(0,2)=setout_theta;
-        ss_setout_y(0,3)=setout_psi;
+        ss_setout_y(0,1)=setout_phi; //roll
+        ss_setout_y(0,2)=setout_theta; //pitch
+        ss_setout_y(0,3)=setout_psi; //yaw
 
 
         /*G*/
@@ -954,13 +954,7 @@ if(cywmc_able){
         //ss_A=ss_A.inversed();
     }
 
-    /*Update r if needed in every loop*/
-    if(need_update_r){
-        /*r*/
-        ss_r(0,0)=setout_Z;
-        ss_r=ss_G_scale*ss_r;
-        need_update_r=0;
-    }
+
     /*Mission*/
     if(modern_control_mission_able){
         mordern_control_able=1;
@@ -1041,38 +1035,102 @@ if(cywmc_able){
                 PX4_INFO("runt=%f",(double)run_t);
             }
         }
-        //Mission 3 //5m
+        //Mission 3 //yaw=x//(0m,0*)5s (3m,0*)10s (3m,180*)5s (3m,0*)5s (0m,0*)
         if(modern_control_mission_select==3){
-//            //Init Time Plan
-//            if(!is_msl_t_set){
+            //Init Time Plan
+            if(!is_msl_t_set){
+            ms1_t[0]=5;//keep still
+            ms1_t[1]=5;//(xm,0*)
+            ms1_t[2]=3;//active (xm,x*)
+            ms1_t[3]=5;//(xm,0*)
+            is_msl_t_set=1;
+            }
 
-//            ms1_t[0]=3;//keep still
-//            ms1_t[1]=50;//rise and keep at 1m
+            //Mission Content
+            if(run_t<ms1_t[0]){
+                give_output_able=0;
+                _att_control(0)=0;//roll
+                _att_control(1)=0;//pitch
+                _att_control(2)=0;//yaw
+                _thrust_sp=0;
+            }
+            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
+                need_update_r=1;
+                setout_Z=3;
+                setout_yaw=0;
+            }
+            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2])){
+                need_update_r=1;
+                setout_Z=3;
+                setout_yaw=1;  //4=0.708,y1=0.16;set=5,y1=;
+                //20190323:set=1,y3=0.17;set=2,y3=0.35;
+            }
+            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2]+ms1_t[3])){
+                need_update_r=1;
+                setout_yaw=0;
+                setout_Z=3;
+            }
+            else{
+                return_back_to_0m_able=1;
+                modern_control_mission_select=0;
+                start_return_back_runt=run_t;
+            }
+            if(loop_times%show_per_times==1){
+                PX4_INFO("runt=%f",(double)run_t);
+            }
 
-//            is_msl_t_set=1;
-//            }
-
-//            //Mission Content
-//            if(run_t<ms1_t[0]){
-//                give_output_able=0;
-//                _att_control(0)=0;//roll
-//                _att_control(1)=0;//pitch
-//                _att_control(2)=0;//yaw
-//                _thrust_sp=0;
-//            }
-//            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
-//                need_update_r=1;
-//                setout_Z=5;
-//            }
-//            else{
-//                return_back_to_0m_able=1;
-//                modern_control_mission_select=0;
-//                start_return_back_runt=run_t;
-//            }
-//            if(loop_times%show_per_times==1){
-//                PX4_INFO("runt=%f",(double)run_t);
-//            }
         }
+        //Mission 4 //input or pitch=x //(0m,0*)5s(3m,0*)10s(3m,x*)5s(3m,0*)5s(0m,0*)
+        if(modern_control_mission_select==4){
+            //Init Time Plan
+            if(!is_msl_t_set){
+            ms1_t[0]=5;//keep still
+            ms1_t[1]=5;//(xm,0*)
+            ms1_t[2]=3;//active (xm,x*)
+            ms1_t[3]=5;//(xm,0*)
+            is_msl_t_set=1;
+            }
+
+            //Mission Content
+            if(run_t<ms1_t[0]){
+                give_output_able=0;
+                _att_control(0)=0;//roll
+                _att_control(1)=0;//pitch
+                _att_control(2)=0;//yaw
+                _thrust_sp=0;
+            }
+            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1])){
+                need_update_r=1;
+                setout_Z=3;
+                setout_yaw=0;
+                setout_roll=0;
+                setout_pitch=0;
+            }
+            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2])){
+                need_update_r=1;
+                setout_Z=3;
+                //setout_yaw=1;
+                setout_roll=0; //set=1,y2=0.58; set=0.2,y2=0.11;
+                setout_pitch=0.2;
+            }
+            else if(run_t>ms1_t[0] && run_t<(ms1_t[0]+ms1_t[1]+ms1_t[2]+ms1_t[3])){
+                need_update_r=1;
+                setout_Z=3;
+                setout_yaw=0;
+                setout_roll=0;
+                setout_pitch=0;
+            }
+            else{
+                return_back_to_0m_able=1;
+                modern_control_mission_select=0;
+                start_return_back_runt=run_t;
+            }
+            if(loop_times%show_per_times==1){
+                PX4_INFO("runt=%f",(double)run_t);
+            }
+
+        }
+
 
     }
     else{
@@ -1083,6 +1141,8 @@ if(cywmc_able){
 //        _att_control(2)=0;//yaw
 //        _thrust_sp=0;
     }
+
+
 
     /*Return Back To 0m*/
     if(run_t>safety_return_time){
@@ -1109,7 +1169,7 @@ if(cywmc_able){
             setout_Z=0;
             need_update_r=1;
         }
-        if(-Z<0.2f){
+        if(-Z<0.17f){
 
             //stand still
             give_output_able=0;
@@ -1126,6 +1186,17 @@ if(cywmc_able){
 
     if(loop_times%show_per_times==1){
         PX4_INFO("I'm Now Going to h=%f m",(double)setout_Z);
+    }
+
+    /*Update r if needed in every loop*/
+    if(need_update_r){
+        /*r*/
+        ss_r(0,0)=setout_Z;
+        ss_r(0,1)=setout_roll;
+        ss_r(0,2)=setout_pitch;
+        ss_r(0,3)=setout_yaw;
+        ss_r=ss_G_scale*ss_r;
+        need_update_r=0;
     }
 
     /* Main feedback control */
@@ -1177,6 +1248,7 @@ if(cywmc_able){
 //            }
 
         }
+
         //actual 为完成稳定，需要的力矩和力，
         //T_max为(最大加速度+g)*m
         //M_max为(最大角加速度)*J
@@ -1226,11 +1298,11 @@ if(cywmc_able){
                  );
 //    PX4_INFO("ss_set=\n%d",
 //             (int)ss_seted);
-//    PX4_INFO("ss_r=\n%f\n%f\n%f\n%f",
-//             (double)ss_r(0,0),
-//             (double)ss_r(0,1),
-//             (double)ss_r(0,2),
-//             (double)ss_r(0,3));
+    PX4_INFO("ss_r=\n%f\n%f\n%f\n%f",
+             (double)ss_r(0,0),
+             (double)ss_r(0,1),
+             (double)ss_r(0,2),
+             (double)ss_r(0,3));
 //    PX4_INFO("ss_k*ss_x=\n%f\n%f\n%f\n%f",
 //             (double)ss_k*ss_x(0,0),
 //             (double)ss_k*ss_x(0,1),
